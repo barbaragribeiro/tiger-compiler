@@ -2,9 +2,9 @@ package Absyn;
 
 public class LetExp extends Exp {
 	public DecList decs;
-	public Exp body;
+	public SeqExp body;
 
-	public LetExp(DecList d, Exp b) {
+	public LetExp(DecList d, SeqExp b) {
 		decs = d;
 		body = b;
 	}

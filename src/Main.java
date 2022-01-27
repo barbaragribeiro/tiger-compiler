@@ -17,8 +17,6 @@ public class Main {
 		System.out.println("\n");
 
 		Semant smt = new Semant(0);
-		ExpTy texp = smt.buildExp((Exp) result);
-
-		System.out.println(texp.toString());
+		smt.buildExp((Exp) result);
 	}
 }

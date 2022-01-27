@@ -1005,7 +1005,7 @@ class CUP$parser$actions {
 		int ty_left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int ty_right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Ty ty_ = (Ty)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		 RESULT = new TypeDec(Symbol.symbol(id), ty_, null); 
+		 RESULT = new TypeDec(Symbol.symbol(id), ty_); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("tydec",8, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;

@@ -2,7 +2,6 @@ package Semant;
 
 import Symbol.*;
 import Types.*;
-import ErrorMsg.*;
 
 public class Env {
 	Table varTable;
@@ -16,12 +15,12 @@ public class Env {
 	}
 
 	public void installTypes() {
-		typeTable.put(Symbol.symbol("int"), new INT());
-		typeTable.put(Symbol.symbol("string"), new STRING());
+		typeTable.put(Symbol.symbol("int"), new TypeEntry(new INT(), rootLvl));
+		typeTable.put(Symbol.symbol("string"), new TypeEntry(new STRING(), rootLvl));
 	}
 
-	public void installFunc(String name, Type resultType, RECORD formals, ) {
-		varTable.put(Symbol.symbol(name), new FuncEntry(rootLvl, name, formals, resultType));
+	public void installFunc(String name, Type resultType, RECORD param) {
+		varTable.put(Symbol.symbol(name), new FuncEntry(rootLvl, name, param, resultType));
 	}
 
 	public void installStdFunctions() {
@@ -35,17 +34,17 @@ public class Env {
 		installFunc("size", new INT(), new RECORD(Symbol.symbol("s"), new STRING(), null));
 		installFunc("exit", new VOID(), new RECORD(Symbol.symbol("i"), new INT(), null));
 
-		RECORD args = null;
-		formals = new RECORD(Symbol.symbol("size"), new INT(), new RECORD(Symbol.symbol("init"), new INT(), null));
-		installFunc("initArray", new INT(), formals);
+		RECORD param = null;
+		param = new RECORD(Symbol.symbol("size"), new INT(), new RECORD(Symbol.symbol("init"), new INT(), null));
+		installFunc("initArray", new INT(), param);
 		
-		formals = new RECORD(Symbol.symbol("s2"), new STRING(), null);
-		formals = new RECORD(Symbol.symbol("s1"), new STRING(), formals);
-		installFunc("concat", new STRING(), formals);
+		param = new RECORD(Symbol.symbol("s2"), new STRING(), null);
+		param = new RECORD(Symbol.symbol("s1"), new STRING(), param);
+		installFunc("concat", new STRING(), param);
 		
-		formals = new RECORD(Symbol.symbol("n"), new INT(), null);
-		formals = new RECORD(Symbol.symbol("first"), new INT(), formals);
-		formals = new RECORD(Symbol.symbol("s"), new STRING(), formals);
-		installFunc("substring", new STRING(), formals);
+		param = new RECORD(Symbol.symbol("n"), new INT(), null);
+		param = new RECORD(Symbol.symbol("first"), new INT(), param);
+		param = new RECORD(Symbol.symbol("s"), new STRING(), param);
+		installFunc("substring", new STRING(), param);
 	}
 }

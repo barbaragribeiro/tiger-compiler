@@ -4,13 +4,11 @@ import Types.*;
 
 public class FuncEntry extends Entry {
 	RECORD paramlist;
-	public int level;
 	public String label;
 
-	public FuncEntry(int level, String label, RECORD p, Type returnType) {
-		super(returnType);
+	public FuncEntry(int lvl, String lbl, RECORD p, Type returnType) {
+		super(returnType, lvl);
 		paramlist = p;
-		this.level = level;
-		this.label = label;
+		label = lbl;
 	}
 }
