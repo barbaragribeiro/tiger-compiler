@@ -1,0 +1,10 @@
+let
+	type a = array of int
+	type b = a
+	var c:int := 10 + 1
+
+	var arr1:a := b [10] of 0
+in
+	arr1[2]
+end
+

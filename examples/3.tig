@@ -1,0 +1,13 @@
+let
+	var test0:int := 0
+	var test1:int := 1
+in
+	if (test1 = 1) then
+		if (test0 = 1) then
+			test0 := 2
+		else
+			test0 := 3
+	else
+		test0 := 4
+end
+
