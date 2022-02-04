@@ -5,7 +5,7 @@ import Types.*;
 
 
 public class ExpTy {
-	TExp texp;
+	public TExp texp;
 	Type typ;
 
 	ExpTy(TExp e, Type t) {

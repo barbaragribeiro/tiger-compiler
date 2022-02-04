@@ -1,9 +1,5 @@
 let
-	type s = string
-	type a = array of int
-	type b = a
-	type c = { campo1 : int, campo2 : string, campo3 : a, campo4 : b }
-	var c:int := 10 + 1
+	function g (a:int , b:string):int = a
 in
 		
 end

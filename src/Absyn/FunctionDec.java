@@ -3,7 +3,6 @@ package Absyn;
 import Symbol.Symbol;
 
 public class FunctionDec extends Dec {
-	public boolean inline = false;
 	public Symbol name;
 	public FieldList params;
 	public NameTy result; /* optional */

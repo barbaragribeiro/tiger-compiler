@@ -1,10 +1,11 @@
 package Types;
 
 public class ARRAY extends Type {
-	public Type element;
+	public Type typ;
 
-	public ARRAY(Type e) {
-		element = e;
+	public ARRAY(Type t, int typeSize) {
+		super(typeSize);
+		typ = t;
 	}
 
 	public boolean coerceTo(Type t) {

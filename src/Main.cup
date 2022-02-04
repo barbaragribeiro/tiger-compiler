@@ -90,7 +90,7 @@ decs ::=       dec:d decs:ds {: RESULT = new DecList(d, ds); :}
 dec ::=        tydec:td {: RESULT = td; :}
 		 	   | vardec:vd {: RESULT = vd; :}
 		 	   | fundec:fd {: RESULT = fd; :};
-tydec ::=      TYPE ID:id EQ ty:ty_ {: RESULT = new TypeDec(Symbol.symbol(id), ty_); :};
+tydec ::=      TYPE ID:id EQ ty:ty_ {: RESULT = new TypeDec(Symbol.symbol(id), ty_, null); :};
 ty ::=         ID:id {: RESULT = new NameTy(Symbol.symbol(id)); :}
 		 	   | OPEN_CURLY tyfields:tf CLOSE_CURLY {: RESULT = new RecordTy(tf); :}
 		 	   | ARRAY OF ID:id {: RESULT = new ArrayTy(Symbol.symbol(id)); :};

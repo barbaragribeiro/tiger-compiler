@@ -5,6 +5,8 @@ import java.io.*;
 import Absyn.*;
 import Symbol.*;
 import Semant.*;
+import Tree.TPrint;
+import Tree.TExp;
 
 public class Main {	
     
@@ -17,6 +19,8 @@ public class Main {
 		System.out.println("\n");
 
 		Semant smt = new Semant(0);
-		smt.buildExp((Exp) result);
+		TPrint tpr = new TPrint(System.out);
+		TExp texp = smt.buildExp((Exp) result).texp;
+		tpr.prExp(texp);
 	}
 }

@@ -202,9 +202,9 @@ public class Print {
     if (d!=null) {
       say("TypeDec("); say(d.name.toString()); sayln(",");
       prTy(d.ty, i+1); 
-  //     if (d.next!=null) {
-	// say(","); prDec(d.next, i+1); 
-  //     }
+      if (d.next!=null) {
+	say(","); prDec(d.next, i+1); 
+      }
       say(")");
     }
   }

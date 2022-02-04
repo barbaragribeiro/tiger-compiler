@@ -1,13 +1,17 @@
 package Tree;
 
 public class TEMP extends TExp {
-	public int t;
+	public String t;
 
-	public TEMP(int temp) {
+	// public TEMP(int temp) {
+	// 	t = "t" + String.valueOf(temp);
+	// }
+
+	public TEMP(String temp) {
 		t = temp;
 	}
 
     public String toString() {
-        return "t" + t;
+        return t;
     }
 }

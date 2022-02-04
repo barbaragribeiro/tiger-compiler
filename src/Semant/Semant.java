@@ -8,22 +8,20 @@ import Symbol.Symbol;
 import Absyn.*;
 import Types.*;
 import Translate.Translate;
+import Tree.TExp;
 
 public class Semant {
   int level;
-  public Env env ;
+  public Env env;
 
   public Semant(int lvl) {
     level = lvl;
     env = new Env(level);
-    env.installTypes();
-    env.installStdFunctions();
   }
 
   public ExpTy buildExp(Exp e) {
-    // Únicos tipos que criam novo contexto em InstalaSimbolo: Let e FunctionDec ??
     if (e instanceof VarExp) {
-      return buildVarExp((VarExp) e);
+      return buildVar( ((VarExp) e).var );
     } 
     else if (e instanceof NilExp) {
       return buildNilExp((NilExp) e);
@@ -37,9 +35,33 @@ public class Semant {
     if (e instanceof SeqExp) {
       return buildSeqExp((SeqExp) e);
     } 
+    else if (e instanceof CallExp) {
+      return buildCallExp((CallExp) e);
+    }
     else if (e instanceof OpExp) {
       return buildOpExp((OpExp) e);
     } 
+    else if (e instanceof RecordExp) {
+      return buildRecordExp((RecordExp) e);
+    }
+    else if (e instanceof ArrayExp) {
+      return buildArrayExp((ArrayExp) e);
+    }
+    else if (e instanceof AssignExp) {
+      return buildAssignExp((AssignExp) e);
+    }
+    // else if (e instanceof IfExp) {
+    //   return buildIfExp((IfExp) e);
+    // }
+    // else if (e instanceof ForExp) {
+    //   return buildForExp((ForExp) e);
+    // }
+    // else if (e instanceof WhileExp) {
+    //   return buildWhileExp((WhileExp) e);
+    // }
+    // else if (e instanceof BreakExp) {
+    //   return buildBreakExp((BreakExp) e);
+    // }
     else if (e instanceof LetExp) {
       return buildLetExp((LetExp) e);
     }
@@ -61,36 +83,89 @@ public class Semant {
   }
 
   /**************** Variables ****************/
+  /* Todas as funções retornam a expressão para 
+  o endereço da variável */
 
-  private ExpTy buildVarExp(VarExp exp) {
-    if (exp.var instanceof SimpleVar) {
-      return buildSimpleVar((SimpleVar) exp.var);
+  private ExpTy buildVar(Var exp) {
+    if (exp instanceof SimpleVar) {
+      return buildSimpleVar((SimpleVar) exp);
     }
-    // else if (exp instanceof SubscriptVar) {
-    //   return buildSubscriptVar((SubscriptVar) exp);
-    // }
-    // else if (exp instanceof FieldVar) {
-    //   return buildFieldVar((FieldVar) exp);
-    // } 
+    else if (exp instanceof SubscriptVar) {
+      return buildSubscriptVar((SubscriptVar) exp);
+    }
+    else if (exp instanceof FieldVar) {
+      return buildFieldVar((FieldVar) exp);
+    } 
     return null;
   }
 
   private ExpTy buildSimpleVar(SimpleVar sv) {
-    return buildSimpleVar(sv.name);
+    Object entry = env.varTable.get(sv.name);
+    if (entry == null) {
+      reportError("Variável indefinida: " + sv.name.toString(), true);
+      return null;
+    }
+    if (!(entry instanceof VarEntry)){
+      reportError("Identificador corresponde a uma função, não uma variável: " + sv.name.toString(), true);
+      return null;
+    }
+    VarEntry ventry = (VarEntry) entry;
+    return new ExpTy(Translate.translateSimpleVar(ventry.temp), ventry.typ); 
   }
 
-  private ExpTy buildSimpleVar(Symbol name) {
-    Object entry = env.varTable.get(name);
-    if (entry == null) {
-      reportError("Variável indefinida: " + name.toString(), true);
+  private ExpTy buildSubscriptVar(SubscriptVar sv) {
+    ExpTy idx = buildExp(sv.index);
+    if (idx.typ instanceof INT){
+      reportError("Índice de tipo não inteiro", true);
       return null;
     }
-    if (!(entry instanceof TypeEntry)){
-      reportError("Identificador corresponde a uma função, não uma variável: " + name.toString(), true);
+
+    ExpTy arrayVar = buildVar(sv.var);
+    Type arrayType = arrayVar.typ;
+    if (!(arrayType instanceof ARRAY)) {
+      reportError("Variável indexada deve ser um array", true);
       return null;
     }
-    // TODO: fazer certo. solução temporária, 0 é só para testar
-    return new ExpTy(Translate.translateSimpleVar(0), ((TypeEntry) entry).typ); 
+
+    return new ExpTy(Translate.translateSubscriptVar(arrayVar.texp, idx.texp, arrayType.size), ((ARRAY) arrayType).typ);
+  }
+
+  private ExpTy buildFieldVar(FieldVar fv){
+    ExpTy recordVar = buildVar(fv.var);
+    RECORD record = (RECORD) recordVar.typ;
+    int offset = 0;
+    while (record != null) {
+      if (record.fieldName.toString() == fv.field.toString()) {
+        return new ExpTy(Translate.translateFieldVar(recordVar.texp, offset), record.fieldType);
+      }
+      offset += record.fieldType.size;
+      record = record.tail;
+    }
+    reportError("Variável não possui campo " + fv.field.toString(), true);
+    return null;
+  }
+
+  /**************** Assign ****************/
+
+  private ExpTy buildAssignExp(AssignExp assign) {
+    ExpTy result = buildRightSideAssign(assign.exp);
+    ExpTy destVar = buildVar(assign.var);
+    // checa tipos compatíveis
+    if (!isEquivalentTypes(destVar.typ, result.typ)) {
+      String msg = "Tipo da expressão incompatível com tipo da variável";
+      reportError(msg, true);
+      return null;
+    }
+    return new ExpTy(Translate.translateAssign(destVar.texp, result.texp), new VOID());
+  }
+
+  private ExpTy buildRightSideAssign(Exp exp) {
+    ExpTy result = buildExp(exp);
+    if (result.typ instanceof VOID) {
+      reportError("Valor de uma atribuição não deve ter tipo nulo", true);
+      return null;
+    }
+    return result;
   }
 
   /**************** Declarations ****************/
@@ -103,84 +178,54 @@ public class Semant {
       return buildTypeDec((TypeDec) dec);
     } 
     else if (dec instanceof FunctionDec) {
-      buildFunctionDec((FunctionDec) dec);
+      return buildFunctionDec((FunctionDec) dec);
     }     
     return null;
   }
 
   private ExpTy buildVarDec(VarDec dec) {
-    // Get dec.init type
-    ExpTy result = buildExp(dec.init);
+    ExpTy result = buildRightSideAssign(dec.init);  
 
     if (dec.typ != null) {
       // Check if type exists in table
-      TypeEntry typeEntryFromTable = getTypeEntryFromTable(dec.typ.name);
+      TypeEntry typeEntry = getTypeEntryFromTable(dec.typ.name);
       // Check if types are compatible
-      if (!isEquivalentTypes(result.typ, typeEntryFromTable.typ)) { 
-        String msg = "Expressão do tipo " + result.typ + " incompatível com variável " + dec.name.toString() + " do tipo " + dec.typ.name.toString();
+      if (!isEquivalentTypes(result.typ, typeEntry.typ)) { 
+        String msg = "Tipo da expressão incompatível com variável " + dec.name.toString() + " do tipo " + dec.typ.name.toString();
         reportError(msg, true);
         return null;
       }
-      // add var to table
-      env.varTable.put(dec.name, typeEntryFromTable);
-    }
-    else {
-      TypeEntry typeEntry = new TypeEntry(result.typ);
-      env.varTable.put(dec.name, typeEntry);      
     }
 
-    // build intermediate code for declaration expression
-    ExpTy var = buildSimpleVar(dec.name);
-    return new ExpTy(Translate.translateAssign(var.texp, result.texp), new VOID());
+    // add var to table  
+    VarEntry entry = env.installVar(level, dec.name, result.typ);
+
+    // build intermediate code
+    return new ExpTy(Translate.translateAssign(Translate.translateSimpleVar(entry.temp), result.texp), new VOID());
   }
 
   private ExpTy buildTypeDec(TypeDec dec) {
-    // TODO: redeclaração de tipos é permitida?
-    // Type typ = (Type) env.typeTable.get(dec.name);
-    // if (typ != null) {
-    //   reportError("Tipo já existe", false);
-    // }
-
+    // redeclaração de tipos é permitida?
     TypeEntry typeEntry = createTypeEntry(dec.ty); 
     // add new type to table
     env.typeTable.put(dec.name, typeEntry);
     // build intermediate code 
-    return new ExpTy(Translate.translateNilExp(), new VOID()); // TODO: é esse codigo gerado pra declaração de tipos?
+    return new ExpTy(Translate.translateNilExp(), new VOID());
   }
 
   private TypeEntry createRecordTypeEntry(RecordTy ty) {
     FieldList fields = ty.fields;
-
-    if (fields == null) {
-      return new TypeEntry(new RECORD());
-    }
-
-    RECORD newRec = null;
-    RECORD firstRec = null;
-    RECORD prevRec = null;
-    while (fields != null) {
-      TypeEntry typeEntry = getTypeEntryFromTable(fields.typ);
-      newRec = new RECORD(fields.name, typeEntry.typ, null);
-      if (firstRec == null) {
-        firstRec = newRec;
-      }
-      if (prevRec != null) {
-        prevRec.tail = newRec;
-      }
-      prevRec = newRec;
-      fields = fields.tail;
-    }
-    return new TypeEntry(firstRec);
+    return new TypeEntry(createRecord(fields));
   }
 
   private TypeEntry createArrayTypeEntry(ArrayTy ty) {
     TypeEntry typeEntryFromTable = getTypeEntryFromTable(ty.typ);
-    return new TypeEntry(new ARRAY(typeEntryFromTable.typ));
+    return new TypeEntry(new ARRAY(typeEntryFromTable.typ, typeEntryFromTable.typ.size));
   }
 
   private TypeEntry createTypeEntry(Ty ty) {
     if (ty instanceof NameTy) {
-      return getTypeEntryFromTable( ((NameTy) ty).name ); // TODO: não deixar ciclo
+      return getTypeEntryFromTable( ((NameTy) ty).name ); // TODO: não deixar ciclo?
     }
     else if (ty instanceof RecordTy) {
       return createRecordTypeEntry((RecordTy) ty);
@@ -191,33 +236,176 @@ public class Semant {
     return null;
   }
 
-  /********** Logic/Aritmetic expressions ***********/
+  private ExpTy buildFunctionDec(FunctionDec dec) {
+    // checa se não existe função padrão com o mesmo nome
+    if (env.stdFunctions.contains(dec.name.toString())) { 
+      reportError(dec.name.toString() + " é um nome reservado", true);
+      return null;
+    }
+
+    newScope();
+
+    // declara variáveis no novo escopo
+    RECORD params = createRecord(dec.params);
+    while (params != null) {
+      env.installVar(level, params.fieldName, params.fieldType);
+      params = params.tail;
+    }
+
+    // build intermediate code
+    ExpTy body = buildExp(dec.body);
+
+    // check if return type of body equals to type in dec
+    Type expectedType = dec.result == null? new VOID() : getTypeEntryFromTable(dec.result.name).typ;
+    if (!isEquivalentTypes(expectedType, body.typ)) {
+      reportError("Tipo da expressão incompatível com tipo da função " + dec.name.toString(), true);
+      return null;
+    }
+
+    endScope();
+
+    // adiciona declaração da função à tabela no escopo anterior
+    FuncEntry entry = env.installFunc(level, dec.name, expectedType, params);
+
+    // adiciona código da função à lista de código
+    ExpTy funcTree;
+    if (dec.result != null) {
+      // se tiver retorno, coloca o retorno na variável temp de retorno (rv)
+      funcTree = new ExpTy(Translate.translateFunctionReturn(body.texp), new VOID());
+    }
+    else {
+      funcTree = new ExpTy(body.texp, new VOID());
+    }
+    // TODO: Na lista de código teremos entry.label: funcTree
+
+    
+    // Retorna void pra árvore principal
+    return new ExpTy(Translate.translateNilExp(), new VOID());
+  }
+
+  
+  /**************** Other Expressions *****************/
+
+  private ExpTy buildArrayExp(ArrayExp exp) {
+    TypeEntry type = getTypeEntryFromTable(exp.typ);
+
+    ExpTy size = buildExp(exp.size);
+    // check if index has type int
+    if(!(size.typ instanceof INT)) {
+      reportError("Tamanho do array de tipo não inteiro", true);
+      return null;
+    }
+
+    ExpTy init = buildExp(exp.init);
+    // check if types are compatible
+    if (!isEquivalentTypes(init.typ, type.typ)) {
+      reportError("Tipo da expressão não compatível com tipo do array", true);
+      return null;
+    }
+
+    ArrayList<TExp> targs = new ArrayList<TExp>();
+    targs.add(size.texp);
+    targs.add(init.texp);
+    return new ExpTy(Translate.translateCall("initArray", false, targs), type.typ);
+  }
+
+
+  private ExpTy buildRecordExp(RecordExp exp) {
+    TypeEntry type = getTypeEntryFromTable(exp.typ);
+
+    // Checa número de campos passados e tipo de cada um. Traduz código para cada inicialização
+    RECORD field = (RECORD) type.typ;
+    FieldExpList init = exp.fields;
+    ArrayList<TExp> tinits = new ArrayList<TExp>();
+    int size = 0;
+    while ((init != null) && (field != null)) {
+      ExpTy initTree = buildExp(init.init);
+      if (!(isEquivalentTypes(initTree.typ, field.fieldType))) {
+        reportError("Tipo do campo \"" + field.fieldName.toString() + "\" difere do valor passado", true);
+        return null;
+      }
+      
+      TExp tempTemp = Translate.translateSimpleVar(String.valueOf(env.nextTemp));
+      TExp fieldAddr = Translate.translateFieldVar(tempTemp, size);
+      tinits.add(Translate.translateAssign(fieldAddr, initTree.texp));
+
+      size += field.size;
+      init = init.tail;
+      field = field.tail;
+    }
+    if ((field == null) && (init != null)) {
+      reportError("Número de campos maior que esperado para o registro", true);
+      return null;
+    }
+    if ((field != null) && (init == null)) {
+      reportError("Número de campos menor que esperado para o registro", true); // TODO: isso pode?
+      return null; 
+    }
+
+    // traduz alocação do registro
+    ArrayList<TExp> targs = new ArrayList<TExp>();
+    targs.add(Translate.translateInt(size));
+    ExpTy alocaRegistro = new ExpTy(Translate.translateCall("malloc", false, targs), type.typ);
+
+    // TODO: juntar todas as inicializações
+
+    // TODO: juntar alocação e inicializações e retornar
+    return null;
+  }
+
+
+  private ExpTy buildCallExp(CallExp exp) {
+    // check if function exists
+    Object entry = env.varTable.get(exp.func);
+    if (entry == null) {
+      reportError("Função indefinida: " + exp.func.toString(), true);
+      return null;
+    }
+    if (!(entry instanceof FuncEntry)){
+      reportError("Identificador corresponde a uma variável, não uma função: " + exp.func.toString(), true);
+      return null;
+    }
+    FuncEntry fentry = (FuncEntry) entry;
+
+    // check number of arguments + type of all arguments and translate args
+    RECORD param = fentry.paramlist;
+    ExpList arg = exp.args;
+    ArrayList<TExp> targs = new ArrayList<TExp>();
+    while ((arg != null) && (param != null)) {
+      ExpTy argTree = buildExp(arg.head);
+      if (!(isEquivalentTypes(argTree.typ, param.fieldType))) {
+        reportError("Tipo do argumento difere do tipo do parâmetro formal da função " + exp.func.toString(), true);
+        return null;
+      }
+      targs.add(argTree.texp);
+
+      param = param.tail;
+      arg = arg.tail;
+    }
+    if ((param == null) && (arg != null)) {
+      reportError("Número de argumentos maior que esperado para a função " + exp.func.toString(), true);
+      return null;        
+    }
+    if ((param != null) && (arg == null)) {
+      reportError("Número de argumentos menor que esperado para a função " + exp.func.toString(), true);
+      return null;
+    }
+
+    boolean hasReturn = !(fentry.typ instanceof VOID);
+    return new ExpTy(Translate.translateCall(fentry.label, hasReturn, targs), fentry.typ);
+  }
 
   private ExpTy buildOpExp(OpExp exp) {
 		ExpTy left = buildExp(exp.left); 
-    ExpTy right = buildExp(exp.right); 
-    // if (exp.oper <= OpExp.DIV || exp.oper >= OpExp.GE) {
-    //  // Aritméticos e maior/menor só pode com int
-      if (!(left.typ instanceof INT) || !(right.typ instanceof INT)) { // instanceof funciona aqui?
+    ExpTy right = buildExp(exp.right);
+      if (!(left.typ instanceof INT) || !(right.typ instanceof INT)) {
         String errorMsg = "A operação " + OpExp.opToStr(exp.oper) + " deve ser feita sobre tipos numéricos";
         reportError(errorMsg, true);
-        return null; // TODO continuar analise semantica apos 1 erro
+        return null;
       }
       else {
         return new ExpTy(Translate.translateOpExp(exp.oper, left.texp, right.texp), new INT()); 
       }
-    // }
-    // if (exp.oper >= OpExp.EQ) {
-    //   // igual pode com int ou string
-    //   if (!(left.typ instanceof INT) || !(left.typ instanceof STRING) || 
-    //       !(right.typ instanceof INT) || !(right.typ instanceof STRING)) { // instanceof funciona aqui?
-    //     System.out.println("Erro: A operação " + OpExp.opToStr(exp.oper) + " deve ser feita sobre tipos numéricos");
-    //     return null;
-    //   }
-    //   else {
-    //     return new ExpTy(Translate.translateOpExp(exp.oper, left.texp, right.texp), new INT()); 
-    //   }
-    // }
   }
 
 
@@ -247,23 +435,28 @@ public class Semant {
   /************ Control expressions ***********/
 
   private ExpTy buildLetExp(LetExp e){
-		env.varTable.beginScope();
-		env.typeTable.beginScope();
-    level = level + 1;
-
+		newScope();
     ExpTy declist = buildDecList(e.decs);
-    ExpTy exspList = buildSeqExp(e.body);
-
-		env.varTable.endScope();
-		env.typeTable.endScope();
-    level = level - 1;
-
+    ExpTy expList = buildSeqExp(e.body);
     // TODO: gerar código intermediario
-
+    // retornar ExpTy retornado por expsList
+    endScope();
     return null;
   }
 
   /************* Helpers *************/
+
+  private void newScope() {
+    env.varTable.beginScope();
+    env.typeTable.beginScope();
+    level = level + 1;
+  }
+
+  private void endScope() {
+		env.varTable.endScope();
+		env.typeTable.endScope();
+    level = level - 1;
+  }
 
   private boolean isEquivalentTypes(Type typ1, Type typ2) {
     // TODO try to coerce
@@ -285,4 +478,33 @@ public class Semant {
         System.exit(-1);
       }
   }
+
+  private RECORD createRecord(FieldList fields) {
+    // int size = 0;
+
+    if (fields == null) {
+      return new RECORD();
+    }
+
+    RECORD newRec = null;
+    RECORD firstRec = null;
+    RECORD prevRec = null;
+    while (fields != null) {
+      TypeEntry typeEntry = getTypeEntryFromTable(fields.typ);
+      newRec = new RECORD(fields.name, typeEntry.typ, null, typeEntry.typ.size);
+      // size += typeEntry.typ.size;
+      if (firstRec == null) {
+        firstRec = newRec;
+      }
+      if (prevRec != null) {
+        prevRec.tail = newRec;
+      }
+      prevRec = newRec;
+      fields = fields.tail;
+    }
+
+    // firstRec.size = size;
+    return firstRec;
+  }
+
 }
