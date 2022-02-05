@@ -173,7 +173,7 @@ public class TPrint {
 
   void prExp(NAME e, int d) {
     indent(d);
-    say("NAME ");
+    say("NAME L");
     say(e.toString());
   }
 

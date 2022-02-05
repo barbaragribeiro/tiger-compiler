@@ -13,10 +13,12 @@ import Tree.TExp;
 public class Semant {
   int level;
   public Env env;
+  public ArrayList<FuncTree> functionTree;
 
   public Semant(int lvl) {
     level = lvl;
     env = new Env(level);
+    functionTree = new ArrayList<FuncTree>();
   }
 
   public ExpTy build(Exp e) {
@@ -254,6 +256,8 @@ public class Semant {
 
     // declara variáveis no novo escopo
     RECORD params = createRecord(dec.params);
+    RECORD params_og = params;
+
     while (params != null) {
       env.installVar(level, params.fieldName, params.fieldType);
       params = params.tail;
@@ -272,7 +276,7 @@ public class Semant {
     endScope();
 
     // adiciona declaração da função à tabela no escopo anterior
-    FuncEntry entry = env.installFunc(level, dec.name, expectedType, params);
+    FuncEntry entry = env.installFunc(level, dec.name, expectedType, params_og);
 
     // adiciona código da função à lista de código
     ExpTy funcTree;
@@ -283,8 +287,9 @@ public class Semant {
     else {
       funcTree = new ExpTy(body.texp, new VOID());
     }
-    // TODO: Na lista de código teremos entry.label: funcTree
 
+    // adiciona funcao à arvore de funcoes
+    functionTree.add(new FuncTree(entry.label, funcTree));
     
     // Retorna void pra árvore principal
     return new ExpTy(Translate.translateNilExp(), new VOID());
@@ -376,6 +381,7 @@ public class Semant {
 
     // check number of arguments + type of all arguments and translate args
     RECORD param = fentry.paramlist;
+
     ExpList arg = exp.args;
     ArrayList<TExp> targs = new ArrayList<TExp>();
     while ((arg != null) && (param != null)) {

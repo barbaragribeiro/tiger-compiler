@@ -26,7 +26,7 @@ public class Print {
   }
 
   void sayln(String s) {
-	say(s); say("\n");
+        say(s); say("\n");
   }
 
   void prVar(SimpleVar v, int d) {
@@ -45,7 +45,7 @@ public class Print {
     prExp(v.index, d+1); say(")");
   }
 
-  /* Print A_var types. Indent d spaces. */
+  /* Imprime tipos A_var, indentando d espacos. */
   void prVar(Var v, int d) {
     indent(d);
     if (v instanceof SimpleVar) prVar((SimpleVar) v, d);
@@ -154,9 +154,9 @@ public class Print {
     prExp(e.init, d+1); say(")");
   }
 
-  /* Print Exp class types. Indent d spaces. */
   public void prExp(Exp e, int d) {
     indent(d);
+
     if (e instanceof OpExp) prExp((OpExp)e, d);
     else if (e instanceof VarExp) prExp((VarExp) e, d);
     else if (e instanceof NilExp) prExp((NilExp) e, d);
@@ -181,7 +181,7 @@ public class Print {
       sayln(d.name.toString());
       prFieldlist(d.params, i+1); sayln(",");
       if (d.result!=null) {
-	indent(i+1); sayln(d.result.name.toString());
+        indent(i+1); sayln(d.result.name.toString());
       }
       prExp(d.body, i+1); sayln(",");
       indent(i+1); prDec(d.next, i+1);
@@ -194,8 +194,10 @@ public class Print {
     if (d.typ!=null) {
       indent(i+1); say(d.typ.name.toString());  sayln(",");
     }
-    prExp(d.init, i+1); sayln(",");
-    indent(i+1); say(d.escape); say(")"); 
+//    prExp(d.init, i+1); sayln(",");
+//    indent(i+1); say(d.escape); say(")"); 
+    prExp(d.init, i+1);
+    say(")"); 
   }
 
   void prDec(TypeDec d, int i) {
@@ -203,7 +205,7 @@ public class Print {
       say("TypeDec("); say(d.name.toString()); sayln(",");
       prTy(d.ty, i+1); 
       if (d.next!=null) {
-	say(","); prDec(d.next, i+1); 
+        sayln(","); indent(i+1); prDec(d.next, i+1); 
       }
       say(")");
     }
@@ -246,8 +248,9 @@ public class Print {
     if (f!=null) {
       sayln("");
       indent(d+1); say(f.name.toString()); sayln("");
-      indent(d+1); say(f.typ.toString()); sayln(",");
-      indent(d+1); say(f.escape); 
+      indent(d+1); say(f.typ.toString());
+//      indent(d+1); say(f.typ.toString()); sayln(",");
+//      indent(d+1); say(f.escape); 
       sayln(",");
       prFieldlist(f.tail, d+1);
     }
@@ -261,7 +264,7 @@ public class Print {
       sayln("");
       prExp(e.head, d+1); 
       if (e.tail != null) {
-	sayln(","); prExplist(e.tail, d+1);
+        sayln(","); prExplist(e.tail, d+1);
       }
     }
     say(")");
@@ -283,6 +286,7 @@ public class Print {
     say("FieldExpList("); 
     if (f!=null) {
       sayln("");
+          indent(d+1);
       say(f.name.toString()); sayln(",");
       prExp(f.init, d+1); sayln(",");
       prFieldExpList(f.tail, d+1);
@@ -290,6 +294,3 @@ public class Print {
     say(")");
   }
 }
-
-
-

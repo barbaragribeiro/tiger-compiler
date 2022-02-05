@@ -21,6 +21,14 @@ public class Main {
 		Semant smt = new Semant(0);
 		TPrint tpr = new TPrint(System.out);
 		TExp texp = smt.build(result).texp;
+		System.out.println("");
 		tpr.prExp(texp);
+
+		// Imprime as funcoes
+		smt.functionTree.forEach((f) -> {
+			System.out.println("\nL" + f.label + ":");
+			tpr.prExp(f.exp.texp);
+
+		});
 	}
 }
