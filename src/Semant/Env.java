@@ -47,7 +47,7 @@ public class Env {
 	public VarEntry installVar(int lvl, Symbol name, Type type) {
 		VarEntry entry = new VarEntry(type, String.valueOf(nextTemp));
 		varTable.put(name, entry);
-		System.out.println("Variavel formal \"" + name + "\" esta associada a t" + entry.temp);
+		System.out.println("Variavel \"" + name + "\" esta associada a t" + entry.temp);
 		nextTemp += 1;
 		return entry;
 	}

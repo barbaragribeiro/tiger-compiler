@@ -20,7 +20,7 @@ public class Main {
 
 		Semant smt = new Semant(0);
 		TPrint tpr = new TPrint(System.out);
-		TExp texp = smt.buildExp((Exp) result).texp;
+		TExp texp = smt.build(result).texp;
 		tpr.prExp(texp);
 	}
 }

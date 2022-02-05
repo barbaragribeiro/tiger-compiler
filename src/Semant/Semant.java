@@ -19,6 +19,13 @@ public class Semant {
     env = new Env(level);
   }
 
+  public ExpTy build(Exp e) {
+    ExpTy code = buildExp(e);
+    if(!Translate.isStm(code.texp)) code.texp = new TExp(code.texp);
+
+    return code;
+  }
+
   public ExpTy buildExp(Exp e) {
     if (e instanceof VarExp) {
       return buildVar( ((VarExp) e).var );
@@ -173,13 +180,13 @@ public class Semant {
   private ExpTy buildDec(Dec dec) {
     if (dec instanceof VarDec) {
       return buildVarDec((VarDec) dec);
-    } 
+    }
     else if (dec instanceof TypeDec) {
       return buildTypeDec((TypeDec) dec);
-    } 
+    }
     else if (dec instanceof FunctionDec) {
       return buildFunctionDec((FunctionDec) dec);
-    }     
+    }
     return null;
   }
 
@@ -411,37 +418,58 @@ public class Semant {
 
   /************ Lists ***********/
 
-  private ExpTy buildDecList(DecList decs) {
-    Tree.TExp declist = null;
-    while (decs != null) {
-      ExpTy decTree = buildDec(decs.head);
-      // TODO append decTree.exp to declist
-      decs = decs.tail;
+  private ExpTy buildDecList(DecList d) {
+    if(d == null) return new ExpTy(null, new VOID());
+
+    // DecList possui apenas cabeca -> nao tem SEQ
+    if(d.tail == null) {
+      // if(debug) System.out.println("DecList: nao tem tail");
+      return new ExpTy(buildDec(d.head).texp, new VOID()); //TODO: VOID?
     }
-    return new ExpTy(declist, new VOID());
+    
+    // Completa
+    ExpTy head = buildDec(d.head);
+    // if(debug) System.out.println("DecList: fiz o head, vou pro tail");
+    ExpTy tail = buildDecList(d.tail);
+    return new ExpTy(Translate.translateDecList(head.texp, tail.texp), new VOID()); //TODO: VOID?
   }
 
-   public ExpTy buildSeqExp(SeqExp exp) {
-    Tree.TExp explist = null;
-    ExpList exps = exp.list;
-    while (exps != null) {
-      ExpTy expTree = buildExp(exps.head);
-      // TODO append expTree.exp to explist
-      exps = exps.tail;
+  // ExpList
+  public ExpTy buildExpList(ExpList e) {
+    // Vazia
+    if(e == null) {
+      return new ExpTy(Translate.translateNilExp(), new VOID());
     }
-    return new ExpTy(explist, new VOID());
-   }
+
+    // ExpList possui apenas cabeca -> nao tem SEQ
+    if(e.tail == null) {
+      ExpTy head = buildExp(e.head);
+      return new ExpTy(head.texp, head.typ);
+    }
+    
+    // Completa
+    ExpTy head = buildExp(e.head);
+    ExpTy tail = buildExpList(e.tail);
+    return new ExpTy(Translate.translateExpList(head.texp, tail.texp), new VOID()); //TODO: VOID?
+  }
 
   /************ Control expressions ***********/
 
   private ExpTy buildLetExp(LetExp e){
 		newScope();
+
     ExpTy declist = buildDecList(e.decs);
     ExpTy expList = buildSeqExp(e.body);
-    // TODO: gerar código intermediario
-    // retornar ExpTy retornado por expsList
+    
+    ExpTy returnExp = new ExpTy(Translate.translateLetExp(declist.texp, expList.texp), new VOID());
+
     endScope();
-    return null;
+
+    return returnExp;
+  }
+
+  public ExpTy buildSeqExp(SeqExp e) {
+    return buildExpList(e.list);
   }
 
   /************* Helpers *************/

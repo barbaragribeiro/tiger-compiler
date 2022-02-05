@@ -7,6 +7,19 @@ import java.util.ArrayList;
 
 public class Translate {
     public static int wordSize = 4;
+
+    public static boolean isStm(TExp e) {
+        if (e instanceof Tree.BINOP ||
+            e instanceof Tree.CALL  ||
+            e instanceof Tree.CONST ||
+            e instanceof Tree.ESEQ  ||
+            e instanceof Tree.MEM   ||
+            e instanceof Tree.NAME  ||
+            e instanceof Tree.TEMP)
+            return false;
+
+        return true;
+    }
     
     public static TExp translateInt(int value) {
 		return new CONST(value);
@@ -72,5 +85,54 @@ public class Translate {
         }
 
         return argsHead;
+    }
+
+    //LET
+    public static TExp translateLetExp(TExp declist, TExp expseq) {
+        if(declist == null) {
+            return new TExp(expseq);
+        }
+
+        if(isStm(declist) && isStm(expseq))
+            return new SEQ(declist, expseq);
+
+        if(isStm(declist) && !isStm(expseq))
+            return new ESEQ(declist, expseq);
+
+        if(!isStm(declist) && isStm(expseq))
+            return new SEQ(new TExp(declist), expseq);
+
+        else
+            return new ESEQ(new TExp(declist), expseq);
+    }
+
+    //DecList
+    public static TExp translateDecList(TExp head, TExp tail) {
+        if(isStm(head) && isStm(tail))
+            return new SEQ(head, tail);
+
+        if(isStm(head) && !isStm(tail))
+            return new ESEQ(head, tail);
+
+        if(!isStm(head) && isStm(tail))
+            return new SEQ(new TExp(head), tail);
+
+        else
+            return new ESEQ(new TExp(head), tail);
+    }
+
+    //ExpList
+    public static TExp translateExpList(TExp head, TExp tail) {
+        if(isStm(head) && isStm(tail))
+            return new SEQ(head, tail);
+
+        if(isStm(head) && !isStm(tail))
+            return new ESEQ(head, tail);
+
+        if(!isStm(head) && isStm(tail))
+            return new SEQ(new TExp(head), tail);
+
+        else
+            return new ESEQ(new TExp(head), tail);
     }
 }
