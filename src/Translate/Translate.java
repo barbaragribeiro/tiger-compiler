@@ -30,8 +30,7 @@ public class Translate {
     }
 
     public static TExp translateStringExp(String str) {
-        // TODO
-        return null;
+        return new NAME(str);
     }
 
     public static TExp translateOpExp(int op, TExp exp1, TExp exp2) {        

@@ -25,10 +25,13 @@ public class Main {
 		tpr.prExp(texp);
 
 		// Imprime as funcoes
-		smt.functionTree.forEach((f) -> {
-			System.out.println("\nL" + f.label + ":");
-			tpr.prExp(f.exp.texp);
-
+		smt.labelTree.forEach((f) -> {
+			if(f instanceof FuncTree) {
+				System.out.println("\n" + f.label + ":");
+				tpr.prExp(((FuncTree) f).exp.texp);
+			} else {
+				System.out.println("\n" + f.label + " = " + ((StringTree) f).val);
+			}
 		});
 	}
 }

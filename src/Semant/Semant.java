@@ -2,6 +2,8 @@ package Semant;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.ArrayDeque;
 
 import Symbol.Table;
 import Symbol.Symbol;
@@ -13,12 +15,12 @@ import Tree.TExp;
 public class Semant {
   int level;
   public Env env;
-  public ArrayList<FuncTree> functionTree;
+  public Deque<LabelTree> labelTree;
 
   public Semant(int lvl) {
     level = lvl;
     env = new Env(level);
-    functionTree = new ArrayList<FuncTree>();
+    labelTree = new ArrayDeque<LabelTree>();
   }
 
   public ExpTy build(Exp e) {
@@ -84,7 +86,9 @@ public class Semant {
   }
   
   private ExpTy buildStringExp(StringExp exp) {
-		return new ExpTy(Translate.translateStringExp(exp.value), new STRING());
+    String label = "L" + Integer.toString(env.installString());
+    labelTree.addFirst(new StringTree(label, exp.value));
+		return new ExpTy(Translate.translateStringExp(label), new STRING());
 	}
 
   private ExpTy buildIntExp(IntExp exp) {
@@ -289,7 +293,7 @@ public class Semant {
     }
 
     // adiciona funcao à arvore de funcoes
-    functionTree.add(new FuncTree(entry.label, funcTree));
+    labelTree.addFirst(new FuncTree(entry.label, funcTree));
     
     // Retorna void pra árvore principal
     return new ExpTy(Translate.translateNilExp(), new VOID());

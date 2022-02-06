@@ -31,7 +31,7 @@ public class Env {
 
 	public FuncEntry installFunc(int lvl, Symbol name, Type resultType, RECORD param) {
 		if (!stdFunctions.contains(name.toString())) {
-			FuncEntry entry = new FuncEntry(lvl, String.valueOf(nextLabel), param, resultType);
+			FuncEntry entry = new FuncEntry(lvl, "L" + String.valueOf(nextLabel), param, resultType);
 			varTable.put(name, entry);
 			System.out.println(name.toString() + " esta rotulada como L" + nextLabel);
 			nextLabel += 1;
@@ -42,6 +42,12 @@ public class Env {
 			varTable.put(name, entry);
 			return entry;
 		}
+	}
+
+	public int installString() {
+		int curTemp = nextLabel;
+		nextLabel += 1;
+		return curTemp;
 	}
 
 	public VarEntry installVar(int lvl, Symbol name, Type type) {
