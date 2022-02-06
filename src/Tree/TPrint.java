@@ -151,7 +151,7 @@ public class TPrint {
   void prExp(MEM e, int d) {
     indent(d);
     sayln("MEM(");
-    prExp(e.exp, d + 1);
+    prExp(e.addr, d + 1);
     say(")");
   }
 

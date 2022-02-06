@@ -128,7 +128,8 @@ public class Semant {
 
   private ExpTy buildSubscriptVar(SubscriptVar sv) {
     ExpTy idx = buildExp(sv.index);
-    if (idx.typ instanceof INT){
+
+    if (!(idx.typ instanceof INT)){
       reportError("Índice de tipo não inteiro", true);
       return null;
     }
@@ -313,13 +314,20 @@ public class Semant {
     }
 
     ExpTy init = buildExp(exp.init);
+
+    ////////////////
+    System.out.println("init.typ: " + init.typ.getClass());
+    System.out.println("type.typ: " + ((ARRAY) type.typ).typ.getClass());
+    ////////////////
+
     // check if types are compatible
-    if (!isEquivalentTypes(init.typ, type.typ)) {
+    if (!isEquivalentTypes(init.typ, ((ARRAY) type.typ).typ)) {
       reportError("Tipo da expressão não compatível com tipo do array", true);
       return null;
     }
 
     ArrayList<TExp> targs = new ArrayList<TExp>();
+    targs.add(Translate.translateNilExp());
     targs.add(size.texp);
     targs.add(init.texp);
     return new ExpTy(Translate.translateCall("initArray", false, targs), type.typ);
