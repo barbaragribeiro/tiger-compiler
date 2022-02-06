@@ -9,6 +9,7 @@ import Symbol.Table;
 import Symbol.Symbol;
 import Absyn.*;
 import Types.*;
+import Temp.*;
 import Translate.Translate;
 import Tree.TExp;
 
@@ -61,9 +62,9 @@ public class Semant {
     else if (e instanceof AssignExp) {
       return buildAssignExp((AssignExp) e);
     }
-    // else if (e instanceof IfExp) {
-    //   return buildIfExp((IfExp) e);
-    // }
+    else if (e instanceof IfExp) {
+      return buildIfExp((IfExp) e);
+    }
     // else if (e instanceof ForExp) {
     //   return buildForExp((ForExp) e);
     // }
@@ -86,7 +87,7 @@ public class Semant {
   }
   
   private ExpTy buildStringExp(StringExp exp) {
-    String label = "L" + Integer.toString(env.installString());
+    String label = "L" + Integer.toString(env.installLabel());
     labelTree.addFirst(new StringTree(label, exp.value));
 		return new ExpTy(Translate.translateStringExp(label), new STRING());
 	}
@@ -146,6 +147,12 @@ public class Semant {
 
   private ExpTy buildFieldVar(FieldVar fv){
     ExpTy recordVar = buildVar(fv.var);
+
+    if(!(recordVar.typ instanceof RECORD)) {
+      reportError("Variável não é um registro", true);
+      return null;  
+    }
+
     RECORD record = (RECORD) recordVar.typ;
     int offset = 0;
     while (record != null) {
@@ -513,6 +520,54 @@ public class Semant {
   public ExpTy buildSeqExp(SeqExp e) {
     return buildExpList(e.list);
   }
+
+
+  /************* Commands *************/
+  private ExpTy buildIfExp(IfExp e) {
+    // Gero tres labels novos: cai no if, cai no else, sai de tudo
+    String l1 = "L" + Integer.toString(env.installLabel());
+    String l2 = "L" + Integer.toString(env.installLabel());
+    String l3 = "L" + Integer.toString(env.installLabel());
+
+    ExpTy condition = buildExp(e.test);
+    ExpTy then = buildExp(e.thenclause);
+    ExpTy senao = new ExpTy(Translate.translateNilExp(), new VOID());
+    if(e.elseclause != null) senao = buildExp(e.elseclause);
+
+    // Checa se expressao da condicao retorna inteiro
+    if(!(condition.typ instanceof INT)) {
+      String errorMsg = "Tipo invalido: inteiro esperado na condicao do IF";
+      reportError(errorMsg, true);
+      return null;
+    }
+
+    int oper;
+    ExpTy left, right;
+    if(e.test instanceof OpExp) {
+      int test_oper = ((OpExp) e.test).oper;
+      if(!(test_oper == OpExp.PLUS  ||
+         test_oper == OpExp.MINUS ||
+         test_oper == OpExp.MUL   ||
+         test_oper == OpExp.DIV)) {
+        oper = test_oper;
+        left = buildExp(((OpExp) e.test).left);
+        right = buildExp(((OpExp) e.test).right);
+      } else {
+        oper = OpExp.NE;
+        left = buildExp(e.test);
+        right = new ExpTy(Translate.translateInt(0), new INT());
+      }
+    } else {
+      oper = OpExp.NE;
+      left = buildExp(e.test);
+      right = new ExpTy(Translate.translateInt(0), new INT());
+    }
+
+    ExpTy jump = new ExpTy(Translate.translateIfCondExp(oper, left.texp, right.texp, new Label(l1), new Label(l2)), new VOID());
+    return new ExpTy(Translate.translateIfExp(jump.texp, then.texp, senao.texp, new Label(l1), new Label(l2), new Label(l3)), new VOID());
+  }
+
+
 
   /************* Helpers *************/
 

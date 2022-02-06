@@ -16,7 +16,7 @@ public class CJUMP extends TExp {
     iffalse = f;
   }
 
-  public final static int EQ = 0, NE = 1, LT = 2, GT = 3, LE = 4, GE = 5, ULT = 6, ULE = 7, UGT = 8, UGE = 9;
+  public final static int EQ = 4, NE = 5, LT = 6, LE = 7, GT = 8, GE = 9;
 
   public static int notRel(int relop) {
     switch (relop) {
@@ -32,14 +32,6 @@ public class CJUMP extends TExp {
       return LE;
     case LE:
       return GT;
-    case ULT:
-      return UGE;
-    case UGE:
-      return ULT;
-    case UGT:
-      return ULE;
-    case ULE:
-      return UGT;
     default:
       throw new Error("bad relop in CJUMP.notRel");
     }

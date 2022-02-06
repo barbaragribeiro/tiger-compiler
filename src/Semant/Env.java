@@ -44,7 +44,7 @@ public class Env {
 		}
 	}
 
-	public int installString() {
+	public int installLabel() {
 		int curTemp = nextLabel;
 		nextLabel += 1;
 		return curTemp;

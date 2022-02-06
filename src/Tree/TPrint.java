@@ -68,18 +68,18 @@ public class TPrint {
     case CJUMP.GE:
       say("GE");
       break;
-    case CJUMP.ULT:
-      say("ULT");
-      break;
-    case CJUMP.ULE:
-      say("ULE");
-      break;
-    case CJUMP.UGT:
-      say("UGT");
-      break;
-    case CJUMP.UGE:
-      say("UGE");
-      break;
+    // case CJUMP.ULT:
+    //   say("ULT");
+    //   break;
+    // case CJUMP.ULE:
+    //   say("ULE");
+    //   break;
+    // case CJUMP.UGT:
+    //   say("UGT");
+    //   break;
+    // case CJUMP.UGE:
+    //   say("UGE");
+    //   break;
     default:
       throw new Error("Print.prStm.CJUMP");
     }

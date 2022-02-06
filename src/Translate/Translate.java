@@ -2,6 +2,7 @@ package Translate;
 
 import Tree.*;
 import Absyn.OpExp;
+import Temp.*;
 
 import java.util.ArrayList;
 
@@ -93,6 +94,20 @@ public class Translate {
 
     public static TExp translateRecordAssignExp(TExp left, TExp right) {
         return new ESEQ(left, right);
+    }
+
+    public static TExp translateIfCondExp(int oper, TExp left, TExp right, Label l1, Label l2) {
+        int rev_oper = CJUMP.notRel(oper);
+        return new CJUMP(rev_oper, left, right, l2, l1);
+    }
+
+    public static TExp translateIfExp(TExp jump, TExp then, TExp senao, Label l1, Label l2, Label l3) {
+        return translateExpList(jump, 
+                    translateExpList(new LABEL(l1), 
+                        translateExpList(then, 
+                            translateExpList(new JUMP(l3), 
+                                translateExpList(new LABEL(l2), 
+                                    translateExpList(senao, new LABEL(l3)))))));
     }
 
     //LET
