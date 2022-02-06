@@ -51,7 +51,7 @@ public class Translate {
     }
 
     public static TExp translateFieldVar(TExp var, int offset) {
-		return new MEM(new BINOP(OpExp.PLUS, var, new CONST(offset)));
+		return new MEM(new BINOP(OpExp.PLUS, var, new CONST(wordSize * offset)));
     }
 
     public static TExp translateFunctionReturn(TExp body) {
@@ -84,6 +84,15 @@ public class Translate {
         }
 
         return argsHead;
+    }
+
+    //RecordExp
+    public static TExp translateRecordExp(TExp aloca, TExp init) {
+        return new SEQ(aloca, init);
+    }
+
+    public static TExp translateRecordAssignExp(TExp left, TExp right) {
+        return new ESEQ(left, right);
     }
 
     //LET

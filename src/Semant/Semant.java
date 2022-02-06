@@ -341,6 +341,10 @@ public class Semant {
     RECORD field = (RECORD) type.typ;
     FieldExpList init = exp.fields;
     ArrayList<TExp> tinits = new ArrayList<TExp>();
+    
+    TExp tempTemp = Translate.translateSimpleVar(String.valueOf(env.nextTemp));
+    env.nextTemp++;
+
     int size = 0;
     while ((init != null) && (field != null)) {
       ExpTy initTree = buildExp(init.init);
@@ -349,7 +353,6 @@ public class Semant {
         return null;
       }
       
-      TExp tempTemp = Translate.translateSimpleVar(String.valueOf(env.nextTemp));
       TExp fieldAddr = Translate.translateFieldVar(tempTemp, size);
       tinits.add(Translate.translateAssign(fieldAddr, initTree.texp));
 
@@ -368,13 +371,34 @@ public class Semant {
 
     // traduz alocação do registro
     ArrayList<TExp> targs = new ArrayList<TExp>();
-    targs.add(Translate.translateInt(size));
-    ExpTy alocaRegistro = new ExpTy(Translate.translateCall("malloc", false, targs), type.typ);
+    targs.add(Translate.translateNilExp());
+    targs.add(Translate.translateInt(size * Translate.wordSize));
+    ExpTy mallocaRegistro = new ExpTy(Translate.translateCall("malloc", false, targs), type.typ);
+    ExpTy alocaRegistro = new ExpTy(Translate.translateAssign(tempTemp, mallocaRegistro.texp), type.typ);
 
     // TODO: juntar todas as inicializações
+    ExpTy initTree = buildFieldList(tinits, 0);
 
     // TODO: juntar alocação e inicializações e retornar
-    return null;
+    ExpTy retornaRegistro = new ExpTy(Translate.translateRecordExp(alocaRegistro.texp, initTree.texp), type.typ);
+    return new ExpTy(Translate.translateRecordAssignExp(retornaRegistro.texp, tempTemp), type.typ);
+  }
+
+  private ExpTy buildFieldList(ArrayList<TExp> tinits, int index) {
+    // Vazia
+    if(index == tinits.size()) {
+      return new ExpTy(Translate.translateNilExp(), new VOID());
+    }
+
+    // ExpList possui apenas cabeca -> nao tem SEQ
+    if(index == tinits.size()-1) {
+      return new ExpTy(tinits.get(index), new VOID());
+    }
+    
+    // Completa
+    ExpTy head = new ExpTy(tinits.get(index), new VOID());
+    ExpTy tail = buildFieldList(tinits, index+1);
+    return new ExpTy(Translate.translateRecordExp(head.texp, tail.texp), new VOID()); //TODO: VOID?
   }
 
 
