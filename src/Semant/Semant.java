@@ -228,7 +228,7 @@ public class Semant {
   }
 
   private ExpTy buildTypeDec(TypeDec dec) {
-    // redeclaração de tipos é permitida?
+    // TODO: redeclaração de tipos é permitida?
     TypeEntry typeEntry = createTypeEntry(dec.ty); 
     // add new type to table
     env.typeTable.put(dec.name, typeEntry);
@@ -248,7 +248,7 @@ public class Semant {
 
   private TypeEntry createTypeEntry(Ty ty) {
     if (ty instanceof NameTy) {
-      return getTypeEntryFromTable( ((NameTy) ty).name ); // TODO: não deixar ciclo?
+      return getTypeEntryFromTable( ((NameTy) ty).name );
     }
     else if (ty instanceof RecordTy) {
       return createRecordTypeEntry((RecordTy) ty);
@@ -336,7 +336,6 @@ public class Semant {
     }
 
     ArrayList<TExp> targs = new ArrayList<TExp>();
-    targs.add(Translate.translateNilExp());
     targs.add(size.texp);
     targs.add(init.texp);
     return new ExpTy(Translate.translateCall("initArray", false, targs), type.typ);
@@ -385,10 +384,8 @@ public class Semant {
     ExpTy mallocaRegistro = new ExpTy(Translate.translateCall("malloc", false, targs), type.typ);
     ExpTy alocaRegistro = new ExpTy(Translate.translateAssign(tempTemp, mallocaRegistro.texp), type.typ);
 
-    // TODO: juntar todas as inicializações
     ExpTy initTree = buildFieldList(tinits, 0);
 
-    // TODO: juntar alocação e inicializações e retornar
     ExpTy retornaRegistro = new ExpTy(Translate.translateRecordExp(alocaRegistro.texp, initTree.texp), type.typ);
     return new ExpTy(Translate.translateRecordAssignExp(retornaRegistro.texp, tempTemp), type.typ);
   }
@@ -407,7 +404,7 @@ public class Semant {
     // Completa
     ExpTy head = new ExpTy(tinits.get(index), new VOID());
     ExpTy tail = buildFieldList(tinits, index+1);
-    return new ExpTy(Translate.translateRecordExp(head.texp, tail.texp), new VOID()); //TODO: VOID?
+    return new ExpTy(Translate.translateRecordExp(head.texp, tail.texp), new VOID());
   }
 
 
@@ -475,14 +472,14 @@ public class Semant {
     // DecList possui apenas cabeca -> nao tem SEQ
     if(d.tail == null) {
       // if(debug) System.out.println("DecList: nao tem tail");
-      return new ExpTy(buildDec(d.head).texp, new VOID()); //TODO: VOID?
+      return new ExpTy(buildDec(d.head).texp, new VOID()); 
     }
     
     // Completa
     ExpTy head = buildDec(d.head);
     // if(debug) System.out.println("DecList: fiz o head, vou pro tail");
     ExpTy tail = buildDecList(d.tail);
-    return new ExpTy(Translate.translateDecList(head.texp, tail.texp), new VOID()); //TODO: VOID?
+    return new ExpTy(Translate.translateDecList(head.texp, tail.texp), new VOID()); 
   }
 
   // ExpList
@@ -501,7 +498,7 @@ public class Semant {
     // Completa
     ExpTy head = buildExp(e.head);
     ExpTy tail = buildExpList(e.tail);
-    return new ExpTy(Translate.translateExpList(head.texp, tail.texp), new VOID()); //TODO: VOID?
+    return new ExpTy(Translate.translateExpList(head.texp, tail.texp), new VOID());
   }
 
   /************ Control expressions ***********/
@@ -615,7 +612,6 @@ public class Semant {
   }
 
   private boolean isEquivalentTypes(Type typ1, Type typ2) {
-    // TODO try to coerce
     return typ1.getClass() == typ2.getClass();
   }
 
