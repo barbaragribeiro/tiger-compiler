@@ -9,7 +9,7 @@ import java.util.HashSet;
 public class Env {
 	Table varTable;
 	Table typeTable; 
-  int rootLvl;
+  	int rootLvl;
 	int nextTemp;
 	int nextLabel;
 	HashSet<String> stdFunctions;

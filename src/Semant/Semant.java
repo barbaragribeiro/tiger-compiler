@@ -17,11 +17,13 @@ public class Semant {
   int level;
   public Env env;
   public Deque<LabelTree> labelTree;
+  Label nextEscape;
 
   public Semant(int lvl) {
     level = lvl;
     env = new Env(level);
     labelTree = new ArrayDeque<LabelTree>();
+    nextEscape = null;
   }
 
   public ExpTy build(Exp e) {
@@ -68,12 +70,12 @@ public class Semant {
     // else if (e instanceof ForExp) {
     //   return buildForExp((ForExp) e);
     // }
-    // else if (e instanceof WhileExp) {
-    //   return buildWhileExp((WhileExp) e);
-    // }
-    // else if (e instanceof BreakExp) {
-    //   return buildBreakExp((BreakExp) e);
-    // }
+    else if (e instanceof WhileExp) {
+      return buildWhileExp((WhileExp) e);
+    }
+    else if (e instanceof BreakExp) {
+      return buildBreakExp((BreakExp) e);
+    }
     else if (e instanceof LetExp) {
       return buildLetExp((LetExp) e);
     }
@@ -323,8 +325,8 @@ public class Semant {
     ExpTy init = buildExp(exp.init);
 
     ////////////////
-    System.out.println("init.typ: " + init.typ.getClass());
-    System.out.println("type.typ: " + ((ARRAY) type.typ).typ.getClass());
+    // System.out.println("init.typ: " + init.typ.getClass());
+    // System.out.println("type.typ: " + ((ARRAY) type.typ).typ.getClass());
     ////////////////
 
     // check if types are compatible
@@ -525,9 +527,9 @@ public class Semant {
   /************* Commands *************/
   private ExpTy buildIfExp(IfExp e) {
     // Gero tres labels novos: cai no if, cai no else, sai de tudo
-    String l1 = "L" + Integer.toString(env.installLabel());
-    String l2 = "L" + Integer.toString(env.installLabel());
-    String l3 = "L" + Integer.toString(env.installLabel());
+    Label l1 = new Label("L" + Integer.toString(env.installLabel()));
+    Label l2 = new Label("L" + Integer.toString(env.installLabel()));
+    Label l3 = new Label("L" + Integer.toString(env.installLabel()));
 
     ExpTy condition = buildExp(e.test);
     ExpTy then = buildExp(e.thenclause);
@@ -541,33 +543,38 @@ public class Semant {
       return null;
     }
 
-    int oper;
-    ExpTy left, right;
-    if(e.test instanceof OpExp) {
-      int test_oper = ((OpExp) e.test).oper;
-      if(!(test_oper == OpExp.PLUS  ||
-         test_oper == OpExp.MINUS ||
-         test_oper == OpExp.MUL   ||
-         test_oper == OpExp.DIV)) {
-        oper = test_oper;
-        left = buildExp(((OpExp) e.test).left);
-        right = buildExp(((OpExp) e.test).right);
-      } else {
-        oper = OpExp.NE;
-        left = buildExp(e.test);
-        right = new ExpTy(Translate.translateInt(0), new INT());
-      }
-    } else {
-      oper = OpExp.NE;
-      left = buildExp(e.test);
-      right = new ExpTy(Translate.translateInt(0), new INT());
-    }
-
-    ExpTy jump = new ExpTy(Translate.translateIfCondExp(oper, left.texp, right.texp, new Label(l1), new Label(l2)), new VOID());
-    return new ExpTy(Translate.translateIfExp(jump.texp, then.texp, senao.texp, new Label(l1), new Label(l2), new Label(l3)), new VOID());
+    ExpTy jump = buildBranch(e.test, l1, l2);
+    return new ExpTy(Translate.translateIfExp(jump.texp, then.texp, senao.texp, l1, l2, l3), new VOID());
   }
 
+  private ExpTy buildBreakExp(BreakExp exp) {
+    ExpTy jump = new ExpTy(Translate.translateBreak(nextEscape), new NIL());
+    nextEscape = null;
+    return jump;
+  }
 
+  private ExpTy buildWhileExp(WhileExp e) {
+    // Gero tres labels novos: cai no teste, cai no corpo do while, sai de tudo
+    Label test = new Label("L" + Integer.toString(env.installLabel()));
+    Label in = new Label("L" + Integer.toString(env.installLabel()));
+    Label out = new Label("L" + Integer.toString(env.installLabel()));
+
+    Label previousEscape = nextEscape;
+    nextEscape = out;
+    ExpTy condition = buildExp(e.test);
+    ExpTy body = buildExp(e.body);
+    nextEscape = previousEscape;
+
+    // Checa se expressao da condicao retorna inteiro
+    if(!(condition.typ instanceof INT)) {
+      String errorMsg = "Tipo invalido: inteiro esperado na condicao do WHILE";
+      reportError(errorMsg, true);
+      return null;
+    }
+
+    ExpTy jump = buildBranch(e.test, in, out);
+    return new ExpTy(Translate.translateWhileExp(jump.texp, body.texp, test, in, out), new VOID());
+  }
 
   /************* Helpers *************/
 
@@ -630,6 +637,32 @@ public class Semant {
 
     // firstRec.size = size;
     return firstRec;
+  }
+
+  private ExpTy buildBranch(Exp test, Label l1, Label l2) {    
+    int oper;
+    ExpTy left, right;
+    if (test instanceof OpExp) {
+      int test_oper = ((OpExp) test).oper;
+      if (!(test_oper == OpExp.PLUS  ||
+         test_oper == OpExp.MINUS ||
+         test_oper == OpExp.MUL   ||
+         test_oper == OpExp.DIV)) {
+        oper = test_oper;
+        left = buildExp(((OpExp) test).left);
+        right = buildExp(((OpExp) test).right);
+      } else {
+        oper = OpExp.NE;
+        left = buildExp(test);
+        right = new ExpTy(Translate.translateInt(0), new INT());
+      }
+    } else {
+      oper = OpExp.NE;
+      left = buildExp(test);
+      right = new ExpTy(Translate.translateInt(0), new INT());
+    }
+    
+    return new ExpTy(Translate.translateIfCondExp(oper, left.texp, right.texp, l1, l2), new VOID());
   }
 
 }

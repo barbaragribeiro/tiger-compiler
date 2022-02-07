@@ -110,6 +110,25 @@ public class Translate {
                                     translateExpList(senao, new LABEL(l3)))))));
     }
 
+    public static TExp translateWhileExp(TExp jump, TExp body, Label test, Label in, Label out) {
+        return translateExpList(new LABEL(test),
+                    translateExpList(jump, 
+                        translateExpList(new LABEL(in), 
+                            translateExpList(body, 
+                                translateExpList(new JUMP(test), 
+                                    new LABEL(out))))));
+        // return translateExpList(
+                    // translateExpList(jump,
+                        // translateExpList(new LABEL(in), 
+                            // translateExpList(body, 
+                                // new JUMP(test)))),
+                    // new LABEL(l3));
+    }
+
+    public static TExp translateBreak(Label escape) {
+        return new JUMP(escape);
+    }
+
     //LET
     public static TExp translateLetExp(TExp declist, TExp expseq) {
         if(declist == null) {
