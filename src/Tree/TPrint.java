@@ -157,8 +157,13 @@ public class TPrint {
 
   void prExp(TEMP e, int d) {
     indent(d);
-    say("TEMP t");
-    say(e.t); //TODO
+    if ((e.t == "rv") || (e.t == "fp")) {
+      say("TEMP ");
+    }
+    else {
+      say("TEMP t");
+    }
+    say(e.t);
   }
 
   void prExp(ESEQ e, int d) {
@@ -187,6 +192,8 @@ public class TPrint {
     indent(d);
     sayln("CALL(");
     prExp(e.name, d + 1);
+    sayln(",");
+    prExp(e.returnTemp, d + 2);
     for (Args a = e.args; a != null; a = a.tail) {
       sayln(",");
       prExp(a.head, d + 2);
