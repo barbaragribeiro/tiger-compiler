@@ -3,7 +3,7 @@ package Absyn;
 public class IfExp extends Exp {
 	public Exp test;
 	public Exp thenclause;
-	public Exp elseclause; /* optional */
+	public Exp elseclause;
 
 	public IfExp(Exp x, Exp y) {
 		test = x;
