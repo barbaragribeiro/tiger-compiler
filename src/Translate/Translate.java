@@ -128,14 +128,19 @@ public class Translate {
         return new JUMP(escape);
     }
 
-    public static TExp translateFor(TExp dec, TExp upper, TExp body, Label test, Label in, Label out) {
+    public static TExp translateFor(TExp dec, TExp upper, TExp body, Label in, Label out, Label increment) {
         // for i := 0 to 10 do exp  ->  i := 0; while (i < 10) do (exp; i++;)
         TExp var = ((MOVE) dec).dest;
-        TExp increment = new BINOP(OpExp.PLUS, var, new CONST(1));
+        TExp add = new MOVE(var, new BINOP(OpExp.PLUS, var, new CONST(1)));
         TExp jump = new CJUMP(OpExp.LE, var, upper, in, out);
-        TExp newBody = translateExpList(body, increment);
         return  translateExpList(dec,
-                    translateWhileExp(jump, newBody, test, in, out));
+                    translateExpList(jump, 
+                        translateExpList(new LABEL(in), 
+                            translateExpList(body, 
+                                translateExpList(new CJUMP(OpExp.LT, var, upper, increment, out),
+                                    translateExpList(new LABEL(increment),
+                                        translateExpList(add,
+                                            translateExpList(new JUMP(in), new LABEL(out)))))))));
     }
 
     //LET

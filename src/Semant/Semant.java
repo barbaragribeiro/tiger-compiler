@@ -577,9 +577,9 @@ public class Semant {
   }
 
   private ExpTy buildForExp(ForExp e) {
-    Label test = new Label("L" + Integer.toString(env.installLabel()));
     Label in = new Label("L" + Integer.toString(env.installLabel()));
     Label out = new Label("L" + Integer.toString(env.installLabel()));
+    Label increment = new Label("L" + Integer.toString(env.installLabel()));
 
     Label previousEscape = nextEscape;
     nextEscape = out;
@@ -596,7 +596,7 @@ public class Semant {
     endScope();
     nextEscape = previousEscape;
   
-    return new ExpTy(Translate.translateFor(varDec.texp, upper.texp, body.texp, test, in, out), new VOID());
+    return new ExpTy(Translate.translateFor(varDec.texp, upper.texp, body.texp, in, out, increment), new VOID());
   }
 
 
