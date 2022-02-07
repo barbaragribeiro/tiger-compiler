@@ -6,7 +6,6 @@ public class CALL extends TExp {
     public Args args;
 
 	public CALL(NAME n, TExp r, Args a) {
-        super(null);
 		name = n;
         returnTemp = r;
         args = a;

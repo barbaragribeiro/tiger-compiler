@@ -21,6 +21,11 @@ public class Translate {
 
         return true;
     }
+
+    public static TExp translateExp(TExp exp) {
+        if(!Translate.isStm(exp)) return new EXP(exp);
+        return exp;
+    }
     
     public static TExp translateInt(int value) {
 		return new CONST(value);
@@ -146,7 +151,7 @@ public class Translate {
     //LET
     public static TExp translateLetExp(TExp declist, TExp expseq) {
         if(declist == null) {
-            return new TExp(expseq);
+            return new EXP(expseq);
         }
 
         if(isStm(declist) && isStm(expseq))
@@ -156,10 +161,10 @@ public class Translate {
             return new ESEQ(declist, expseq);
 
         if(!isStm(declist) && isStm(expseq))
-            return new SEQ(new TExp(declist), expseq);
+            return new SEQ(new EXP(declist), expseq);
 
         else
-            return new ESEQ(new TExp(declist), expseq);
+            return new ESEQ(new EXP(declist), expseq);
     }
 
     //DecList
@@ -171,10 +176,10 @@ public class Translate {
             return new ESEQ(head, tail);
 
         if(!isStm(head) && isStm(tail))
-            return new SEQ(new TExp(head), tail);
+            return new SEQ(new EXP(head), tail);
 
         else
-            return new ESEQ(new TExp(head), tail);
+            return new ESEQ(new EXP(head), tail);
     }
 
     //ExpList
@@ -186,9 +191,9 @@ public class Translate {
             return new ESEQ(head, tail);
 
         if(!isStm(head) && isStm(tail))
-            return new SEQ(new TExp(head), tail);
+            return new SEQ(new EXP(head), tail);
 
         else
-            return new ESEQ(new TExp(head), tail);
+            return new ESEQ(new EXP(head), tail);
     }
 }

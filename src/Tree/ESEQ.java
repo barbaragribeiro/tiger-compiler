@@ -5,7 +5,6 @@ public class ESEQ extends TExp {
   public TExp exp;
 
   public ESEQ(TExp s, TExp e) {
-    super(null);
     stm = s;
     exp = e;
   }

@@ -7,8 +7,4 @@ public class ARRAY extends Type {
 		super(typeSize);
 		typ = t;
 	}
-
-	public boolean coerceTo(Type t) {
-		return this == t.actual();
-	}
 }

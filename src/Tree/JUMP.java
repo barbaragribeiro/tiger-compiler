@@ -7,7 +7,6 @@ public class JUMP extends TExp {
   public LabelList targets;
 
   public JUMP(TExp e, LabelList t) {
-    super(null);
     exp = e;
     targets = t;
   }

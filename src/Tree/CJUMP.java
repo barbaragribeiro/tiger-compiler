@@ -8,7 +8,6 @@ public class CJUMP extends TExp {
   public Label iftrue, iffalse;
 
   public CJUMP(int rel, TExp l, TExp r, Label t, Label f) {
-    super(null);
     relop = rel;
     left = l;
     right = r;

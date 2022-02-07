@@ -1,13 +1,12 @@
 package Tree;
+import Absyn.OpExp;
 
 public class TPrint {
 
   java.io.PrintStream out;
-  // Temp.TempMap tmap;
 
   public TPrint(java.io.PrintStream o) {
     out = o;
-    // tmap = new Temp.DefaultMap(); //TODO
   }
 
   void indent(int d) {
@@ -50,38 +49,26 @@ public class TPrint {
     indent(d);
     say("CJUMP(");
     switch (s.relop) {
-    case CJUMP.EQ:
+    case OpExp.EQ:
       say("EQ");
       break;
-    case CJUMP.NE:
+    case OpExp.NE:
       say("NE");
       break;
-    case CJUMP.LT:
+    case OpExp.LT:
       say("LT");
       break;
-    case CJUMP.GT:
+    case OpExp.GT:
       say("GT");
       break;
-    case CJUMP.LE:
+    case OpExp.LE:
       say("LE");
       break;
-    case CJUMP.GE:
+    case OpExp.GE:
       say("GE");
       break;
-    // case CJUMP.ULT:
-    //   say("ULT");
-    //   break;
-    // case CJUMP.ULE:
-    //   say("ULE");
-    //   break;
-    // case CJUMP.UGT:
-    //   say("UGT");
-    //   break;
-    // case CJUMP.UGE:
-    //   say("UGE");
-    //   break;
     default:
-      throw new Error("Print.prStm.CJUMP");
+      throw new Error("TPrint.prStm.CJUMP");
     }
     sayln(",");
     prExp(s.left, d + 1);
@@ -108,38 +95,38 @@ public class TPrint {
     indent(d);
     say("BINOP(");
     switch (e.op) {
-    case BINOP.PLUS:
+    case OpExp.PLUS:
       say("PLUS");
       break;
-    case BINOP.MINUS:
+    case OpExp.MINUS:
       say("MINUS");
       break;
-    case BINOP.MUL:
+    case OpExp.MUL:
       say("MUL");
       break;
-    case BINOP.DIV:
+    case OpExp.DIV:
       say("DIV");
       break;
-    case BINOP.AND:
-      say("AND");
+    case OpExp.EQ:
+      say("EQ");
       break;
-    case BINOP.OR:
-      say("OR");
+    case OpExp.NE:
+      say("NE");
       break;
-    case BINOP.LSHIFT:
-      say("LSHIFT");
+    case OpExp.LE:
+      say("LE");
       break;
-    case BINOP.RSHIFT:
-      say("RSHIFT");
+    case OpExp.LT:
+      say("LT");
       break;
-    case BINOP.ARSHIFT:
-      say("ARSHIFT");
+    case OpExp.GE:
+      say("GE");
       break;
-    case BINOP.XOR:
-      say("XOR");
+    case OpExp.GT:
+      say("GT");
       break;
     default:
-      throw new Error("Print.prExp.BINOP");
+      throw new Error("TPrint.prExp.BINOP");
     }
     sayln(",");
     prExp(e.texp1, d + 1);
@@ -228,12 +215,18 @@ public class TPrint {
       prStm((CJUMP) e, d);
     else if (e instanceof MOVE)
       prStm((MOVE) e, d);
+    else if (e instanceof EXP)
+      prStm((EXP) e, d);
     else {
-      indent(d);
-      sayln("EXP(");
-      prExp(e.exp, d + 1);
-      say(")");
+      throw new Error("TPrint.prExp");
     }
+  }
+
+  public void prStm(EXP e, int d){
+    indent(d);
+    sayln("EXP(");
+    prExp(e.exp, d + 1);
+    say(")");
   }
 
   public void prExp(TExp e) {

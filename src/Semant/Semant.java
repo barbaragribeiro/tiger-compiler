@@ -28,7 +28,7 @@ public class Semant {
 
   public ExpTy build(Exp e) {
     ExpTy code = buildExp(e);
-    if(!Translate.isStm(code.texp)) code.texp = new TExp(code.texp);
+    code.texp = Translate.translateExp(code.texp);
 
     return code;
   }
@@ -158,10 +158,10 @@ public class Semant {
     RECORD record = (RECORD) recordVar.typ;
     int offset = 0;
     while (record != null) {
-      if (record.fieldName.toString() == fv.field.toString()) {
-        return new ExpTy(Translate.translateFieldVar(recordVar.texp, offset), record.fieldType);
+      if (record.name.toString() == fv.field.toString()) {
+        return new ExpTy(Translate.translateFieldVar(recordVar.texp, offset), record.typ);
       }
-      offset += record.fieldType.size;
+      offset += record.typ.size;
       record = record.tail;
     }
     reportError("Variável não possui campo " + fv.field.toString(), true);
@@ -273,7 +273,7 @@ public class Semant {
     RECORD params_og = params;
 
     while (params != null) {
-      env.installVar(level, params.fieldName, params.fieldType);
+      env.installVar(level, params.name, params.typ);
       params = params.tail;
     }
 
@@ -356,8 +356,8 @@ public class Semant {
     int size = 0;
     while ((init != null) && (field != null)) {
       ExpTy initTree = buildExp(init.init);
-      if (!(isEquivalentTypes(initTree.typ, field.fieldType))) {
-        reportError("Tipo do campo \"" + field.fieldName.toString() + "\" difere do valor passado", true);
+      if (!(isEquivalentTypes(initTree.typ, field.typ))) {
+        reportError("Tipo do campo \"" + field.name.toString() + "\" difere do valor passado", true);
         return null;
       }
       
@@ -428,7 +428,7 @@ public class Semant {
     ArrayList<TExp> targs = new ArrayList<TExp>();
     while ((arg != null) && (param != null)) {
       ExpTy argTree = buildExp(arg.head);
-      if (!(isEquivalentTypes(argTree.typ, param.fieldType))) {
+      if (!(isEquivalentTypes(argTree.typ, param.typ))) {
         reportError("Tipo do argumento difere do tipo do parâmetro formal da função " + exp.func.toString(), true);
         return null;
       }

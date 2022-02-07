@@ -8,7 +8,6 @@ public class TEMP extends TExp {
 	// }
 
 	public TEMP(String temp) {
-		super(null);
 		t = temp;
 	}
 
