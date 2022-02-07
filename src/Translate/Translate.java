@@ -115,8 +115,7 @@ public class Translate {
                     translateExpList(jump, 
                         translateExpList(new LABEL(in), 
                             translateExpList(body, 
-                                translateExpList(new JUMP(test), 
-                                    new LABEL(out))))));
+                                translateExpList(new JUMP(test), new LABEL(out))))));
         // return translateExpList(
                     // translateExpList(jump,
                         // translateExpList(new LABEL(in), 
@@ -127,6 +126,16 @@ public class Translate {
 
     public static TExp translateBreak(Label escape) {
         return new JUMP(escape);
+    }
+
+    public static TExp translateFor(TExp dec, TExp upper, TExp body, Label test, Label in, Label out) {
+        // for i := 0 to 10 do exp  ->  i := 0; while (i < 10) do (exp; i++;)
+        TExp var = ((MOVE) dec).dest;
+        TExp increment = new BINOP(OpExp.PLUS, var, new CONST(1));
+        TExp jump = new CJUMP(OpExp.LE, var, upper, in, out);
+        TExp newBody = translateExpList(body, increment);
+        return  translateExpList(dec,
+                    translateWhileExp(jump, newBody, test, in, out));
     }
 
     //LET

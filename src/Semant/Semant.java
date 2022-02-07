@@ -67,9 +67,9 @@ public class Semant {
     else if (e instanceof IfExp) {
       return buildIfExp((IfExp) e);
     }
-    // else if (e instanceof ForExp) {
-    //   return buildForExp((ForExp) e);
-    // }
+    else if (e instanceof ForExp) {
+      return buildForExp((ForExp) e);
+    }
     else if (e instanceof WhileExp) {
       return buildWhileExp((WhileExp) e);
     }
@@ -575,6 +575,30 @@ public class Semant {
     ExpTy jump = buildBranch(e.test, in, out);
     return new ExpTy(Translate.translateWhileExp(jump.texp, body.texp, test, in, out), new VOID());
   }
+
+  private ExpTy buildForExp(ForExp e) {
+    Label test = new Label("L" + Integer.toString(env.installLabel()));
+    Label in = new Label("L" + Integer.toString(env.installLabel()));
+    Label out = new Label("L" + Integer.toString(env.installLabel()));
+
+    Label previousEscape = nextEscape;
+    nextEscape = out;
+    newScope();
+    
+    ExpTy varDec = buildVarDec(e.var);
+    ExpTy upper = buildExp(e.hi);
+    if (!(upper.typ instanceof INT)) {
+      reportError("Tipo invalido: inteiro esperado no TO do FOR", true);
+      return null;
+    }
+    ExpTy body = buildExp(e.body);
+
+    endScope();
+    nextEscape = previousEscape;
+  
+    return new ExpTy(Translate.translateFor(varDec.texp, upper.texp, body.texp, test, in, out), new VOID());
+  }
+
 
   /************* Helpers *************/
 
