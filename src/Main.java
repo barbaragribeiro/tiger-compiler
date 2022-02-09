@@ -42,6 +42,7 @@ public class Main {
 				System.out.println("\n===============");
 				System.out.println("Semântica aceita!\n\n");
 			} catch (Exception e) {
+		        System.out.println(e);
 		        System.out.println("\n===============");
 		        System.out.println("Erro na semântica!");
 			}

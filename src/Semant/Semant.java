@@ -281,8 +281,6 @@ public class Semant {
     Type expectedType = dec.result == null? new VOID() : getTypeEntryFromTable(dec.result.name).typ;
     FuncEntry entry_in = env.installFunc(level, dec.name, expectedType, params_og);
 
-    System.out.println(expectedType.getClass());
-
     // build intermediate code
     ExpTy body = buildExp(dec.body);
 
@@ -328,11 +326,6 @@ public class Semant {
     }
 
     ExpTy init = buildExp(exp.init);
-
-    ////////////////
-    // System.out.println("init.typ: " + init.typ.getClass());
-    // System.out.println("type.typ: " + ((ARRAY) type.typ).typ.getClass());
-    ////////////////
 
     // check if types are compatible
     if (!isEquivalentTypes(init.typ, ((ARRAY) type.typ).typ)) {
@@ -459,10 +452,6 @@ public class Semant {
 		ExpTy left = buildExp(exp.left); 
     ExpTy right = buildExp(exp.right);
       if (!(left.typ instanceof INT) || !(right.typ instanceof INT)) {
-        //////////////////
-        System.out.println(left.texp.getClass() + " " + left.typ.getClass());
-        System.out.println(right.texp.getClass() + " " + right.typ.getClass());
-        /////////////////
         String errorMsg = "A operação " + OpExp.opToStr(exp.oper) + " deve ser feita sobre tipos numéricos";
         reportError(errorMsg, true);
         return null;
@@ -480,7 +469,6 @@ public class Semant {
 
     // DecList possui apenas cabeca -> nao tem SEQ
     if(d.tail == null) {
-      // if(debug) System.out.println("DecList: nao tem tail");
       return new ExpTy(buildDec(d.head).texp, new VOID()); 
     }
     
