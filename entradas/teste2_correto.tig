@@ -1,7 +1,7 @@
-let
+let 
 	function soma(x1: int, x2: int) : int = x1 + x2
-	var resultado : int 0 /* Original: var resultado : int := 0*/
+	var resultado : int := 0
+	var result_string : string := ""
 in
 	resultado := soma(2, 5)
 end
-

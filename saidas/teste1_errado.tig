@@ -1,0 +1,56 @@
+LetExp(
+ DecList(
+  VarDec(resultString,
+   string,
+   StringExp("")),
+  DecList(
+   FunctionDec(soma
+    Fieldlist(
+     x1
+     int,
+     Fieldlist(
+      x2
+      int,
+      Fieldlist())),
+    int
+    LetExp(
+     DecList(
+      VarDec(str1,
+       string,
+       StringExp("a")),
+      DecList(
+       VarDec(str2,
+        string,
+        StringExp("b")),
+       DecList())),
+SeqExp(
+      ExpList(
+       OpExp(
+        PLUS,
+        varExp(
+         SimpleVar(str1)),
+        varExp(
+         SimpleVar(str2)))))),
+    FunctionDec()),
+   DecList())),
+SeqExp(
+  ExpList(
+   AssignExp(
+    SimpleVar(resultString),
+    CallExp(soma,
+     ExpList(
+      IntExp(2),
+      ExpList(
+       IntExp(5))))))))
+
+
+===============
+Sintaxe aceita!
+
+
+Variavel "resultString" esta associada a t0
+Variavel "x1" esta associada a t1
+Variavel "x2" esta associada a t2
+Variavel "str1" esta associada a t3
+Variavel "str2" esta associada a t4
+Erro: A operação + deve ser feita sobre tipos numéricos

@@ -1,0 +1,11 @@
+let 
+	var result : int := 10	
+	function soma(x1: int, x2: int) : int = 
+		let var num1 : int := 20
+		    var num2 : int := 30
+		in
+		    num1 + num2
+		end	
+in
+	result := soma(2 , 5)
+end

@@ -1,0 +1,7 @@
+let
+  type myRec = {int1 : int, int2 : int, int3 : int}
+  type myArr = array of myRec
+  var arr : myArr := myArr [10] of myRec {int1 = 0, int2 = 0, int3 = 0}
+in
+  arr[3] := myRec{int1 = 0, int2 = 0, int3 = 3}
+end

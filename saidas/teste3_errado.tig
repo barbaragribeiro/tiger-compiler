@@ -1,0 +1,59 @@
+LetExp(
+ DecList(
+  TypeDec(myRec,
+   RecordTy(
+    Fieldlist(
+     int1
+     int,
+     Fieldlist(
+      int2
+      int,
+      Fieldlist(
+       int3
+       int,
+       Fieldlist()))))),
+  DecList(
+   TypeDec(myArr,
+    ArrayTy(myRec)),
+   DecList(
+    VarDec(arr,
+     myArr,
+     ArrayExp(myArr,
+      IntExp(10),
+      RecordExp(myRec,
+       FieldExpList(
+        int1,
+        IntExp(0),
+        FieldExpList(
+         int2,
+         IntExp(0),
+         FieldExpList(
+          int3,
+          IntExp(0),
+          FieldExpList())))))),
+    DecList()))),
+SeqExp(
+  ExpList(
+   AssignExp(
+    SubscriptVar(
+     SimpleVar(arr),
+     IntExp(3)),
+    RecordExp(myRec,
+     FieldExpList(
+      int1,
+      IntExp(0),
+      FieldExpList(
+       int2,
+       StringExp("batata"),
+       FieldExpList(
+        int3,
+        IntExp(3),
+        FieldExpList()))))))))
+
+
+===============
+Sintaxe aceita!
+
+
+Variavel "arr" esta associada a t1
+Erro: Tipo do campo "int2" difere do valor passado

@@ -477,7 +477,6 @@ public class Semant {
     
     // Completa
     ExpTy head = buildDec(d.head);
-    // if(debug) System.out.println("DecList: fiz o head, vou pro tail");
     ExpTy tail = buildDecList(d.tail);
     return new ExpTy(Translate.translateDecList(head.texp, tail.texp), new VOID()); 
   }
@@ -498,7 +497,7 @@ public class Semant {
     // Completa
     ExpTy head = buildExp(e.head);
     ExpTy tail = buildExpList(e.tail);
-    return new ExpTy(Translate.translateExpList(head.texp, tail.texp), new VOID());
+    return new ExpTy(Translate.translateExpList(head.texp, tail.texp), tail.typ);
   }
 
   /************ Control expressions ***********/
@@ -509,7 +508,7 @@ public class Semant {
     ExpTy declist = buildDecList(e.decs);
     ExpTy expList = buildSeqExp(e.body);
     
-    ExpTy returnExp = new ExpTy(Translate.translateLetExp(declist.texp, expList.texp), new VOID());
+    ExpTy returnExp = new ExpTy(Translate.translateLetExp(declist.texp, expList.texp), expList.typ);
 
     endScope();
 

@@ -1,0 +1,144 @@
+LetExp(
+ DecList(
+  TypeDec(myRec,
+   RecordTy(
+    Fieldlist(
+     int1
+     int,
+     Fieldlist(
+      int2
+      int,
+      Fieldlist(
+       int3
+       int,
+       Fieldlist()))))),
+  DecList(
+   TypeDec(myArr,
+    ArrayTy(myRec)),
+   DecList(
+    VarDec(arr,
+     myArr,
+     ArrayExp(myArr,
+      IntExp(10),
+      RecordExp(myRec,
+       FieldExpList(
+        int1,
+        IntExp(0),
+        FieldExpList(
+         int2,
+         IntExp(0),
+         FieldExpList(
+          int3,
+          IntExp(0),
+          FieldExpList())))))),
+    DecList()))),
+SeqExp(
+  ExpList(
+   AssignExp(
+    SubscriptVar(
+     SimpleVar(arr),
+     IntExp(3)),
+    RecordExp(myRec,
+     FieldExpList(
+      int1,
+      IntExp(0),
+      FieldExpList(
+       int2,
+       IntExp(0),
+       FieldExpList(
+        int3,
+        IntExp(3),
+        FieldExpList()))))))))
+
+
+===============
+Sintaxe aceita!
+
+
+Variavel "arr" esta associada a t1
+
+SEQ(
+ SEQ(
+  EXP(
+   CONST 0),
+  SEQ(
+   EXP(
+    CONST 0),
+   MOVE(
+    TEMP t1,
+    CALL(
+     NAME initArray,
+      CONST 0,
+      CONST 10,
+      ESEQ(
+       SEQ(
+        MOVE(
+         TEMP t0,
+         CALL(
+          NAME malloc,
+           CONST 0,
+           CONST 0,
+           CONST 12)),
+        SEQ(
+         MOVE(
+          MEM(
+           BINOP(PLUS,
+            TEMP t0,
+            CONST 0)),
+          CONST 0),
+         SEQ(
+          MOVE(
+           MEM(
+            BINOP(PLUS,
+             TEMP t0,
+             CONST 4)),
+           CONST 0),
+          MOVE(
+           MEM(
+            BINOP(PLUS,
+             TEMP t0,
+             CONST 8)),
+           CONST 0)))),
+       TEMP t0))))),
+ MOVE(
+  MEM(
+   BINOP(PLUS,
+    TEMP t1,
+    BINOP(MUL,
+     CONST 3,
+     CONST 4))),
+  ESEQ(
+   SEQ(
+    MOVE(
+     TEMP t2,
+     CALL(
+      NAME malloc,
+       CONST 0,
+       CONST 0,
+       CONST 12)),
+    SEQ(
+     MOVE(
+      MEM(
+       BINOP(PLUS,
+        TEMP t2,
+        CONST 0)),
+      CONST 0),
+     SEQ(
+      MOVE(
+       MEM(
+        BINOP(PLUS,
+         TEMP t2,
+         CONST 4)),
+       CONST 0),
+      MOVE(
+       MEM(
+        BINOP(PLUS,
+         TEMP t2,
+         CONST 8)),
+       CONST 3)))),
+   TEMP t2)))
+
+===============
+Semântica aceita!
+
+

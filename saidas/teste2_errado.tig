@@ -1,0 +1,50 @@
+LetExp(
+ DecList(
+  FunctionDec(soma
+   Fieldlist(
+    x1
+    int,
+    Fieldlist(
+     x2
+     int,
+     Fieldlist())),
+   int
+   OpExp(
+    PLUS,
+    varExp(
+     SimpleVar(x1)),
+    varExp(
+     SimpleVar(x2))),
+   FunctionDec()),
+  DecList(
+   VarDec(resultado,
+    int,
+    IntExp(0)),
+   DecList(
+    VarDec(result_string,
+     string,
+     StringExp("")),
+    DecList()))),
+SeqExp(
+  ExpList(
+   AssignExp(
+    SimpleVar(result_string),
+    CallExp(soma,
+     ExpList(
+      IntExp(2),
+      ExpList(
+       StringExp("ufmg"),
+       ExpList(
+        IntExp(5)))))))))
+
+
+===============
+Sintaxe aceita!
+
+
+Variavel "x1" esta associada a t0
+Variavel "x2" esta associada a t1
+soma esta rotulada como L0
+Variavel "resultado" esta associada a t2
+Variavel "result_string" esta associada a t3
+Erro: Tipo do argumento difere do tipo do parâmetro formal da função soma

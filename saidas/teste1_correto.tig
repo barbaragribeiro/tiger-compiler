@@ -1,0 +1,91 @@
+LetExp(
+ DecList(
+  VarDec(result,
+   int,
+   IntExp(10)),
+  DecList(
+   FunctionDec(soma
+    Fieldlist(
+     x1
+     int,
+     Fieldlist(
+      x2
+      int,
+      Fieldlist())),
+    int
+    LetExp(
+     DecList(
+      VarDec(num1,
+       int,
+       IntExp(20)),
+      DecList(
+       VarDec(num2,
+        int,
+        IntExp(30)),
+       DecList())),
+SeqExp(
+      ExpList(
+       OpExp(
+        PLUS,
+        varExp(
+         SimpleVar(num1)),
+        varExp(
+         SimpleVar(num2)))))),
+    FunctionDec()),
+   DecList())),
+SeqExp(
+  ExpList(
+   AssignExp(
+    SimpleVar(result),
+    CallExp(soma,
+     ExpList(
+      IntExp(2),
+      ExpList(
+       IntExp(5))))))))
+
+
+===============
+Sintaxe aceita!
+
+
+Variavel "result" esta associada a t0
+Variavel "x1" esta associada a t1
+Variavel "x2" esta associada a t2
+Variavel "num1" esta associada a t3
+Variavel "num2" esta associada a t4
+soma esta rotulada como L0
+
+SEQ(
+ EXP(
+  ESEQ(
+   MOVE(
+    TEMP t0,
+    CONST 10),
+   CONST 0)),
+ MOVE(
+  TEMP t0,
+  CALL(
+   NAME L0,
+    TEMP fp,
+    CONST 2,
+    CONST 5)))
+
+L0:
+MOVE(
+ TEMP rv,
+ ESEQ(
+  SEQ(
+   MOVE(
+    TEMP t3,
+    CONST 20),
+   MOVE(
+    TEMP t4,
+    CONST 30)),
+  BINOP(PLUS,
+   TEMP t3,
+   TEMP t4)))
+
+===============
+Semântica aceita!
+
+
