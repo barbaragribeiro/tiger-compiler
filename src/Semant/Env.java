@@ -45,8 +45,14 @@ public class Env {
 	}
 
 	public int installLabel() {
-		int curTemp = nextLabel;
+		int curLabel = nextLabel;
 		nextLabel += 1;
+		return curLabel;
+	}
+
+	public int installTemp() {
+		int curTemp = nextTemp;
+		nextTemp += 1;
 		return curTemp;
 	}
 

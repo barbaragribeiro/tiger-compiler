@@ -8,80 +8,79 @@ package compiler;
 /** CUP generated class containing symbol constants. */
 public class sym {
   /* terminals */
-  public static final int FUNCTION = 42;
-  public static final int LTE = 18;
-  public static final int UMINUS = 16;
+  public static final int LCBR = 5;
+  public static final int SLASH = 12;
+  public static final int UMINUS = 42;
+  public static final int LSBR = 7;
+  public static final int SEMI = 24;
   public static final int ARRAY = 38;
-  public static final int CLOSE_SQUARE = 9;
-  public static final int FOR = 32;
-  public static final int MINUS = 13;
-  public static final int SEMICOLON = 2;
-  public static final int AND = 24;
-  public static final int LT = 22;
-  public static final int TYPE = 41;
-  public static final int NIL = 26;
-  public static final int IN = 36;
-  public static final int OR = 23;
-  public static final int COMMA = 4;
-  public static final int DIV = 15;
-  public static final int OPEN_SQUARE = 8;
-  public static final int OPEN_CURLY = 10;
-  public static final int ATTRIBUTION = 25;
-  public static final int PLUS = 12;
-  public static final int IF = 27;
+  public static final int FOR = 31;
+  public static final int MINUS = 10;
+  public static final int STAR = 11;
+  public static final int AND = 19;
+  public static final int LT = 15;
+  public static final int RPAR = 4;
+  public static final int TYPE = 37;
+  public static final int NIL = 2;
+  public static final int IN = 35;
+  public static final int OR = 20;
+  public static final int COMMA = 23;
+  public static final int GEQ = 18;
+  public static final int NUM = 43;
+  public static final int PLUS = 9;
+  public static final int IF = 26;
   public static final int ID = 45;
-  public static final int DOT = 5;
+  public static final int DOT = 25;
   public static final int OF = 39;
   public static final int EOF = 0;
+  public static final int RCBR = 6;
+  public static final int EQUAL = 13;
   public static final int error = 1;
-  public static final int NEQ = 17;
-  public static final int BREAK = 34;
-  public static final int EQ = 20;
-  public static final int GTE = 19;
-  public static final int OPEN_PARENTHESIS = 6;
-  public static final int TIMES = 14;
-  public static final int COLON = 3;
-  public static final int CLOSE_CURLY = 11;
-  public static final int ELSE = 29;
-  public static final int STRING_CONSTANT = 44;
-  public static final int TO = 33;
-  public static final int WHILE = 30;
-  public static final int LET = 35;
-  public static final int THEN = 28;
-  public static final int END = 37;
-  public static final int CLOSE_PARENTHESIS = 7;
-  public static final int GT = 21;
+  public static final int BREAK = 33;
+  public static final int RSBR = 8;
+  public static final int ATTR = 21;
+  public static final int COLON = 22;
+  public static final int ELSE = 28;
+  public static final int FUNC = 41;
+  public static final int TO = 32;
+  public static final int WHILE = 29;
+  public static final int NEQUAL = 14;
+  public static final int LET = 34;
+  public static final int THEN = 27;
+  public static final int LEQ = 17;
+  public static final int END = 36;
+  public static final int STRING = 44;
+  public static final int LPAR = 3;
+  public static final int GT = 16;
   public static final int VAR = 40;
-  public static final int INTEGER_CONSTANT = 43;
-  public static final int DO = 31;
+  public static final int DO = 30;
   public static final String[] terminalNames = new String[] {
   "EOF",
   "error",
-  "SEMICOLON",
-  "COLON",
-  "COMMA",
-  "DOT",
-  "OPEN_PARENTHESIS",
-  "CLOSE_PARENTHESIS",
-  "OPEN_SQUARE",
-  "CLOSE_SQUARE",
-  "OPEN_CURLY",
-  "CLOSE_CURLY",
+  "NIL",
+  "LPAR",
+  "RPAR",
+  "LCBR",
+  "RCBR",
+  "LSBR",
+  "RSBR",
   "PLUS",
   "MINUS",
-  "TIMES",
-  "DIV",
-  "UMINUS",
-  "NEQ",
-  "LTE",
-  "GTE",
-  "EQ",
-  "GT",
+  "STAR",
+  "SLASH",
+  "EQUAL",
+  "NEQUAL",
   "LT",
-  "OR",
+  "GT",
+  "LEQ",
+  "GEQ",
   "AND",
-  "ATTRIBUTION",
-  "NIL",
+  "OR",
+  "ATTR",
+  "COLON",
+  "COMMA",
+  "SEMI",
+  "DOT",
   "IF",
   "THEN",
   "ELSE",
@@ -93,13 +92,14 @@ public class sym {
   "LET",
   "IN",
   "END",
+  "TYPE",
   "ARRAY",
   "OF",
   "VAR",
-  "TYPE",
-  "FUNCTION",
-  "INTEGER_CONSTANT",
-  "STRING_CONSTANT",
+  "FUNC",
+  "UMINUS",
+  "NUM",
+  "STRING",
   "ID"
   };
 }

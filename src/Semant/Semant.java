@@ -277,11 +277,16 @@ public class Semant {
       params = params.tail;
     }
 
+    // adiciona declaração da função à tabela no proprio escopo
+    Type expectedType = dec.result == null? new VOID() : getTypeEntryFromTable(dec.result.name).typ;
+    FuncEntry entry_in = env.installFunc(level, dec.name, expectedType, params_og);
+
+    System.out.println(expectedType.getClass());
+
     // build intermediate code
     ExpTy body = buildExp(dec.body);
 
     // check if return type of body equals to type in dec
-    Type expectedType = dec.result == null? new VOID() : getTypeEntryFromTable(dec.result.name).typ;
     if (!isEquivalentTypes(expectedType, body.typ)) {
       reportError("Tipo da expressão incompatível com tipo da função " + dec.name.toString(), true);
       return null;
@@ -290,7 +295,7 @@ public class Semant {
     endScope();
 
     // adiciona declaração da função à tabela no escopo anterior
-    FuncEntry entry = env.installFunc(level, dec.name, expectedType, params_og);
+    FuncEntry entry_out = env.installFunc(level, dec.name, expectedType, params_og);
 
     // adiciona código da função à lista de código
     ExpTy funcTree;
@@ -303,7 +308,7 @@ public class Semant {
     }
 
     // adiciona funcao à arvore de funcoes
-    labelTree.addFirst(new FuncTree(entry.label, funcTree));
+    labelTree.addFirst(new FuncTree(entry_out.label, funcTree));
     
     // Retorna void pra árvore principal
     return new ExpTy(Translate.translateNilExp(), new VOID());
@@ -454,6 +459,10 @@ public class Semant {
 		ExpTy left = buildExp(exp.left); 
     ExpTy right = buildExp(exp.right);
       if (!(left.typ instanceof INT) || !(right.typ instanceof INT)) {
+        //////////////////
+        System.out.println(left.texp.getClass() + " " + left.typ.getClass());
+        System.out.println(right.texp.getClass() + " " + right.typ.getClass());
+        /////////////////
         String errorMsg = "A operação " + OpExp.opToStr(exp.oper) + " deve ser feita sobre tipos numéricos";
         reportError(errorMsg, true);
         return null;
@@ -539,8 +548,33 @@ public class Semant {
       return null;
     }
 
+    // Checa se tipos de then e else sao iguais
+    if(e.elseclause != null) {
+      if(!(isEquivalentTypes(then.typ, senao.typ))) {
+        String errorMsg = "Clausulas then e else da expressao if devem retornar o mesmo tipo.";
+        reportError(errorMsg, true);
+        return null;
+      }
+    } else {
+      if(!(then.typ instanceof VOID)) {
+        String errorMsg = "void esperado no returno de IF.";
+        reportError(errorMsg, true);
+        return null;
+      }
+    }
+
     ExpTy jump = buildBranch(e.test, l1, l2);
-    return new ExpTy(Translate.translateIfExp(jump.texp, then.texp, senao.texp, l1, l2, l3), new VOID());
+
+    // Checa se if retorna algo ou nao
+    if(then.typ instanceof VOID) {
+      return new ExpTy(Translate.translateIfExp(jump.texp, then.texp, senao.texp, l1, l2, l3), then.typ);
+    } else {
+      ExpTy rv = new ExpTy(Translate.translateSimpleVar(Integer.toString(env.installTemp())), then.typ);
+      ExpTy then_return = new ExpTy(Translate.translateAssign(rv.texp, then.texp), then.typ);
+      ExpTy senao_return = new ExpTy(Translate.translateAssign(rv.texp, senao.texp), then.typ);
+      ExpTy if_exp = new ExpTy(Translate.translateIfExp(jump.texp, then_return.texp, senao_return.texp, l1, l2, l3), then.typ);
+      return new ExpTy(Translate.translateExpList(if_exp.texp, rv.texp), rv.typ);
+    }
   }
 
   private ExpTy buildBreakExp(BreakExp exp) {

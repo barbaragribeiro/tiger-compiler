@@ -1,11 +1,12 @@
+// import java_cup.runtime.*;
 package compiler;
+import java.io.*;
 import Absyn.*;
 import Symbol.*;
-import java.io.*;
 
-parser code {: 
-
-    public static void main(String args[]) throws Exception {
+parser code
+{:
+	public static void main(String args[]) throws Exception {
 		Yylex lexer = new Yylex(System.in);
 		parser p = new parser(lexer);
 		Exp result = (Exp) p.parse().value;
@@ -16,113 +17,143 @@ parser code {:
 :}
 
 
-terminal  	SEMICOLON, COLON, COMMA, DOT;
-terminal 	OPEN_PARENTHESIS, CLOSE_PARENTHESIS, OPEN_SQUARE, 
-		CLOSE_SQUARE, OPEN_CURLY, CLOSE_CURLY;
-terminal 	PLUS, MINUS, TIMES, DIV, UMINUS;
-terminal 	NEQ, LTE, GTE, EQ, GT, LT;
-terminal 	OR, AND, ATTRIBUTION;
-terminal 	NIL, IF, THEN, ELSE, 
-		WHILE, DO, FOR, TO, BREAK, 
-		LET, IN, END, ARRAY, OF;
-terminal	VAR, TYPE, FUNCTION;
-terminal	Integer INTEGER_CONSTANT;
-terminal	String STRING_CONSTANT;
-terminal 	String ID;
+/* Terminais */
+terminal NIL;
+terminal LPAR, RPAR, LCBR, RCBR, LSBR, RSBR;
+terminal PLUS, MINUS, STAR, SLASH, EQUAL, NEQUAL, LT, GT, LEQ, GEQ, AND, OR;
+terminal ATTR, COLON, COMMA, SEMI, DOT;
+terminal IF, THEN, ELSE, WHILE, DO, FOR, TO, BREAK, LET, IN, END, TYPE, ARRAY, OF, VAR, FUNC;
+terminal UMINUS;
 
-non terminal Exp program, exp;
-non terminal ExpList expseq, expseq1, args, args1;
+/* Terminais com valor */
+terminal Integer NUM;
+terminal String STRING;
+terminal String ID;
+
+/* Nao terminais */
+non terminal Exp exp;
+non terminal Var l_value;
 non terminal DecList decs;
 non terminal Dec dec;
+non terminal ExpList expseq, expseq1, args, args1;
+non terminal FieldExpList idexps;
 non terminal TypeDec tydec;
-non terminal Ty ty;
-non terminal FieldList tyfields, tyfields1;
 non terminal VarDec vardec;
 non terminal FunctionDec fundec;
-non terminal Var l_value;
-non terminal FieldExpList idexps;
-non terminal Symbol type_id;
+non terminal Ty ty;
+non terminal FieldList tyfields, tyfields1;
 
-precedence nonassoc ATTRIBUTION;
-precedence nonassoc EQ , NEQ , LT , LTE , GT , GTE;
-precedence left OR, AND;
+/* Lista de Precedencia */
+precedence left AND, OR;
+precedence nonassoc EQUAL, NEQUAL, LT, GT, LEQ, GEQ;
 precedence left PLUS, MINUS;
-precedence left TIMES, DIV;
-precedence left ELSE;
-precedence left UMINUS;
+precedence left STAR, SLASH;
+precedence right UMINUS;
+
+/* Gramatica */
+start with exp;
+
+exp ::= l_value:lv                      {: RESULT = new VarExp(lv); :}
+      | ID:id                           {: RESULT = new VarExp(new SimpleVar(Symbol.symbol(id))); :}
+      | NIL                             {: RESULT = new NilExp(); :}
+      | LPAR expseq:es RPAR             {: RESULT = new SeqExp(es); :}
+      | NUM:num                         {: RESULT = new IntExp(num); :}
+      | STRING:string                   {: RESULT = new StringExp(string); :}
+
+      | MINUS exp:e                     {: RESULT = new OpExp(new IntExp(0), OpExp.MINUS, e); :}
+      %prec UMINUS
+
+      | ID:id LPAR args:ag RPAR         {: RESULT = new CallExp(Symbol.symbol(id), ag); :}
+
+      | exp:e1 PLUS exp:e2              {: RESULT = new OpExp(e1, OpExp.PLUS, e2); :}
+      | exp:e1 MINUS exp:e2             {: RESULT = new OpExp(e1, OpExp.MINUS, e2); :}
+      | exp:e1 STAR exp:e2              {: RESULT = new OpExp(e1, OpExp.MUL, e2); :}
+      | exp:e1 SLASH exp:e2             {: RESULT = new OpExp(e1, OpExp.DIV, e2); :}
+
+      | exp:e1 EQUAL exp:e2             {: RESULT = new OpExp(e1, OpExp.EQ, e2); :}
+      | exp:e1 NEQUAL exp:e2            {: RESULT = new OpExp(e1, OpExp.NE, e2); :}
+
+      | exp:e1 LT exp:e2                {: RESULT = new OpExp(e1, OpExp.LT, e2); :}
+      | exp:e1 GT exp:e2                {: RESULT = new OpExp(e1, OpExp.GT, e2); :}
+      | exp:e1 LEQ exp:e2               {: RESULT = new OpExp(e1, OpExp.LE, e2); :}
+      | exp:e1 GEQ exp:e2               {: RESULT = new OpExp(e1, OpExp.GE, e2); :}
+
+      | exp:e1 AND exp:e2               {: RESULT = new IfExp(e1, e2, new IntExp(0)); :}
+      | exp:e1 OR exp:e2                {: RESULT = new IfExp(e1, new IntExp(1), e2); :}
+
+      | ID:tid LCBR ID:id EQUAL exp:e idexps:idex RCBR         {: RESULT = new RecordExp(Symbol.symbol(tid), new FieldExpList(Symbol.symbol(id), e, idex)); :}
+
+      | ID:tid LSBR exp:e1 RSBR OF exp:e2                      {: RESULT = new ArrayExp(Symbol.symbol(tid), e1, e2); :}
+
+      | l_value:lv ATTR exp:e           {: RESULT = new AssignExp(lv, e); :}
+      | ID:id ATTR exp:e                {: RESULT = new AssignExp(new SimpleVar(Symbol.symbol(id)), e); :}
+
+      | IF exp:e1 THEN exp:e2 ELSE exp:e3        {: RESULT = new IfExp(e1, e2, e3); :}
+      | IF exp:e1 THEN exp:e2                    {: RESULT = new IfExp(e1, e2); :}
+
+      | WHILE exp:e1 DO exp:e2          {: RESULT = new WhileExp(e1, e2); :}
+
+      | FOR ID:id ATTR exp:e1 TO exp:e2 DO exp:e3                   {: RESULT = new ForExp(new VarDec(Symbol.symbol(id), new NameTy(Symbol.symbol("int")), e1), e2, e3); :}
+
+      | BREAK                           {: RESULT = new BreakExp(); :}
+
+      | LET decs:d IN expseq:es END     {: RESULT = new LetExp(d, new SeqExp(es)); :};
 
 
-start with program;
+decs ::= dec:d decs:ds                  {: RESULT = new DecList(d, ds); :}
+       | {:  RESULT = null; :};
 
-program ::=                 exp:e {: RESULT = e; :};
 
-exp ::=			l_value:lv {: RESULT = new VarExp(lv); :}
-		 	   | NIL {: RESULT = new NilExp(); :}
-		 	   | INTEGER_CONSTANT:i {: RESULT = new IntExp(i.intValue()); :}
-		 	   | STRING_CONSTANT:s {: RESULT = new StringExp(s); :}
-		 	   | OPEN_PARENTHESIS expseq:es CLOSE_PARENTHESIS {: RESULT = new SeqExp(es); :}
-		 	   | MINUS exp:e {: RESULT = new OpExp(new IntExp(0), OpExp.MINUS, e); :} %prec UMINUS
-		 	   | ID:id OPEN_PARENTHESIS args:a CLOSE_PARENTHESIS {: RESULT = new CallExp(Symbol.symbol(id), a); :}
-		 	   | exp:e1 MINUS exp:e2 {: RESULT = new OpExp(e1, OpExp.MINUS, e2); :}
-		 	   | exp:e1 PLUS exp:e2 {: RESULT = new OpExp(e1, OpExp.PLUS, e2); :}
-			   | exp:e1 TIMES exp:e2 {: RESULT = new OpExp(e1, OpExp.MUL, e2); :}
-		 	   | exp:e1 DIV exp:e2 {: RESULT = new OpExp(e1, OpExp.DIV, e2); :}
-		 	   | exp:e1 NEQ exp:e2 {: RESULT = new OpExp(e1, OpExp.NE, e2); :}
-		 	   | exp:e1 EQ exp:e2 {: RESULT = new OpExp(e1, OpExp.EQ, e2); :}
-		 	   | exp:e1 LT exp:e2 {: RESULT = new OpExp(e1, OpExp.LT, e2); :}
-		 	   | exp:e1 GT exp:e2 {: RESULT = new OpExp(e1, OpExp.GT, e2); :}
-		 	   | exp:e1 LTE exp:e2 {: RESULT = new OpExp(e1, OpExp.LE, e2); :}
-		 	   | exp:e1 GTE exp:e2 {: RESULT = new OpExp(e1, OpExp.GE, e2); :}
-		 	   | exp:e1 AND exp:e2 {: RESULT = new OpExp(e1, OpExp.MUL, e2); :}
-		 	   | exp:e1 OR exp:e2 {: RESULT = new OpExp(e1, OpExp.PLUS, e2); :}
-		 	   | type_id:tid OPEN_CURLY ID:id EQ exp:e idexps:ide CLOSE_CURLY {: RESULT = new RecordExp(tid, new FieldExpList(Symbol.symbol(id), e, ide)); :}
-		 	   | ID:id OPEN_SQUARE exp:e1 CLOSE_SQUARE OF exp:e2 {: RESULT = new ArrayExp(Symbol.symbol(id), e1, e2); :}
-		 	   | l_value:lv ATTRIBUTION exp:e {: RESULT = new AssignExp(lv, e); :}
-		 	   | IF exp:e1 THEN exp:e2 ELSE exp:e3 {: RESULT = new IfExp(e1, e2, e3); :}
-		 	   | IF exp:e1 THEN exp:e2 {: RESULT = new IfExp(e1, e2); :}
-		 	   | WHILE exp:e1 DO exp:e2 {: RESULT = new WhileExp(e1, e2); :}
-		 	   | FOR ID:id ATTRIBUTION exp:e1 TO exp:e2 DO exp:e3 {: RESULT = new ForExp(new VarDec(Symbol.symbol(id), new NameTy(Symbol.symbol("int")), e1), e2, e3); :}
-		 	   | BREAK {: RESULT = new BreakExp(); :}
-		 	   | LET decs:ds IN expseq:es END {: RESULT = new LetExp(ds, new SeqExp(es)); :};
+dec ::= tydec:td       {:  RESULT = td; :}
+      | vardec:vd      {:  RESULT = vd; :}
+      | fundec:fd      {:  RESULT = fd; :};
 
-decs ::=       dec:d decs:ds {: RESULT = new DecList(d, ds); :}
-		 	   | {: RESULT = null; :};
-dec ::=        tydec:td {: RESULT = td; :}
-		 	   | vardec:vd {: RESULT = vd; :}
-		 	   | fundec:fd {: RESULT = fd; :};
-tydec ::=      TYPE ID:id EQ ty:ty_ {: RESULT = new TypeDec(Symbol.symbol(id), ty_, null); :};
-ty ::=         ID:id {: RESULT = new NameTy(Symbol.symbol(id)); :}
-		 	   | OPEN_CURLY tyfields:tf CLOSE_CURLY {: RESULT = new RecordTy(tf); :}
-		 	   | ARRAY OF ID:id {: RESULT = new ArrayTy(Symbol.symbol(id)); :};
-tyfields::=		ID:id COLON type_id:tid tyfields1:tyf1 {: RESULT = new FieldList(Symbol.symbol(id), tid, tyf1); :}
-		 	   | {: RESULT = null; :};
-tyfields1::=	COMMA ID:id COLON type_id:tid tyfields1:tyf1 {: RESULT = new FieldList(Symbol.symbol(id), tid, tyf1); :}
-		 	   | {: RESULT = null; :};
 
-vardec ::=		 VAR ID:id ATTRIBUTION exp:e {: RESULT = new VarDec(Symbol.symbol(id), null, e); :}
-		 	   | VAR ID:id COLON type_id:tid ATTRIBUTION exp:e {: RESULT = new VarDec(Symbol.symbol(id), new NameTy(tid), e); :};
-fundec ::=		 FUNCTION ID:id OPEN_PARENTHESIS tyfields:tyf CLOSE_PARENTHESIS EQ exp:e {: RESULT = new FunctionDec(Symbol.symbol(id), tyf, null, e, null); :}
-		 	   | FUNCTION ID:id OPEN_PARENTHESIS tyfields:tyf CLOSE_PARENTHESIS COLON type_id:tid EQ exp:e {: RESULT = new FunctionDec(Symbol.symbol(id), tyf, new NameTy(tid), e, null); :};
+tydec ::= TYPE ID:id EQUAL ty:t         {:  RESULT = new TypeDec(Symbol.symbol(id), t, null); :};
 
-type_id ::=		 ID:id {: RESULT = Symbol.symbol(id); :};
 
-l_value ::=		 ID:id {: RESULT = new SimpleVar(Symbol.symbol(id)); :}
-			   | l_value:lv DOT ID:id {: RESULT = new FieldVar(lv, Symbol.symbol(id)); :}
-		 	   | l_value:lv OPEN_SQUARE exp:e CLOSE_SQUARE {: RESULT = new SubscriptVar(lv, e); :}
-		 	   | ID:id OPEN_SQUARE exp:e CLOSE_SQUARE {: RESULT = new SubscriptVar(new SimpleVar(Symbol.symbol(id)), e); :};
+ty ::= ID:id           {:  RESULT = new NameTy(Symbol.symbol(id)); :}
+     | LCBR ID:id COLON ID:tid tyfields1:tf1 RCBR          {:  RESULT = new RecordTy(new FieldList(Symbol.symbol(id), Symbol.symbol(tid), tf1)); :}
+     | ARRAY OF ID:id  {:  RESULT = new ArrayTy(Symbol.symbol(id)); :};
 
-expseq ::=		exp:e expseq1:es1 {: RESULT = new ExpList(e, es1); :}
-		 	   | {: RESULT = null; :};
-			   
-expseq1 ::=		SEMICOLON exp:e expseq1:es1 {: RESULT = new ExpList(e, es1); :}
-		 	   | {: RESULT = null; :};
 
-args ::= 		exp:e args1:a1 {: RESULT = new ExpList(e, a1); :}
-		 	   | {: RESULT = null; :};
+tyfields ::= ID:id COLON ID:tid tyfields1:tf1              {:  RESULT = new FieldList(Symbol.symbol(id), Symbol.symbol(tid), tf1); :}
+           | {:  RESULT = null; :};
 
-args1 ::= 		COMMA exp:e args1:a1 {: RESULT = new ExpList(e, a1); :}
-		 	   | {: RESULT = null; :};
 
-idexps ::= 		COMMA ID:id EQ exp:e idexps:ide {: RESULT = new FieldExpList(Symbol.symbol(id), e, ide); :}
-		 	   | {: RESULT = null; :};
+tyfields1 ::= COMMA ID:id COLON ID:tid tyfields1:tf1       {:  RESULT = new FieldList(Symbol.symbol(id), Symbol.symbol(tid), tf1); :}
+            | {:  RESULT = null; :};
 
+
+vardec ::= VAR ID:id ATTR exp:e          {:  RESULT = new VarDec(Symbol.symbol(id), null, e); :}
+         | VAR ID:id COLON ID:tid ATTR exp:e               {:  RESULT = new VarDec(Symbol.symbol(id), new NameTy(Symbol.symbol(tid)), e); :};
+
+
+fundec ::= FUNC ID:id LPAR tyfields:tf RPAR EQUAL exp:e         {:  RESULT = new FunctionDec(Symbol.symbol(id), tf, null, e, null); :}
+         | FUNC ID:id LPAR tyfields:tf RPAR COLON ID:tid EQUAL exp:e              {:  RESULT = new FunctionDec(Symbol.symbol(id), tf, new NameTy(Symbol.symbol(tid)), e, null); :};
+
+
+l_value ::= l_value:lv DOT ID:id         {:  RESULT = new FieldVar(lv, Symbol.symbol(id)); :}
+          | ID:id1 DOT ID:id2            {:  RESULT = new FieldVar(new SimpleVar(Symbol.symbol(id1)), Symbol.symbol(id2)); :}
+          | l_value:lv LSBR exp:e RSBR   {:  RESULT = new SubscriptVar(lv, e); :}
+          | ID:id LSBR exp:e RSBR        {:  RESULT = new SubscriptVar(new SimpleVar(Symbol.symbol(id)), e); :};
+
+
+expseq ::= exp:e expseq1:es1             {:  RESULT = new ExpList(e, es1); :}
+         | {:  RESULT = null; :};
+
+
+expseq1 ::= SEMI exp:e expseq1:es1       {:  RESULT = new ExpList(e, es1); :}
+          | {:  RESULT = null; :};
+
+
+args ::= exp:e args1:a1                  {:  RESULT = new ExpList(e, a1); :}
+       | {:  RESULT = null; :};
+
+
+args1 ::= COMMA exp:e args1:a1           {:  RESULT = new ExpList(e, a1); :}
+        | {:  RESULT = null; :};
+
+
+idexps ::= COMMA ID:id EQUAL exp:e idexps:idex        {:  RESULT = new FieldExpList(Symbol.symbol(id), e, idex); :}
+         | {:  RESULT = null; :};
