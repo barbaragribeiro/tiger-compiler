@@ -229,9 +229,16 @@ public class Semant {
 
   private ExpTy buildTypeDec(TypeDec dec) {
     // TODO: redeclaração de tipos é permitida?
+    env.typeTable.put(dec.name, new TypeEntry(new NIL()));
     TypeEntry typeEntry = createTypeEntry(dec.ty); 
     // add new type to table
     env.typeTable.put(dec.name, typeEntry);
+
+    /////////////
+    System.out.println(((TypeEntry) env.typeTable.get(dec.name)).typ.getClass());
+    /////////////
+
+
     // build intermediate code 
     return new ExpTy(Translate.translateNilExp(), new VOID());
   }
@@ -269,17 +276,18 @@ public class Semant {
     newScope();
 
     // declara variáveis no novo escopo
+
     RECORD params = createRecord(dec.params);
     RECORD params_og = params;
 
-    while (params != null) {
+    while (params != null && params.name != null) {
       env.installVar(level, params.name, params.typ);
       params = params.tail;
     }
 
     // adiciona declaração da função à tabela no proprio escopo
     Type expectedType = dec.result == null? new VOID() : getTypeEntryFromTable(dec.result.name).typ;
-    FuncEntry entry_in = env.installFunc(level, dec.name, expectedType, params_og);
+    FuncEntry entry_in = env.installFunc(level, dec.name, expectedType, params_og, null);
 
     // build intermediate code
     ExpTy body = buildExp(dec.body);
@@ -293,7 +301,7 @@ public class Semant {
     endScope();
 
     // adiciona declaração da função à tabela no escopo anterior
-    FuncEntry entry_out = env.installFunc(level, dec.name, expectedType, params_og);
+    FuncEntry entry_out = env.installFunc(level, dec.name, expectedType, params_og, entry_in.label);
 
     // adiciona código da função à lista de código
     ExpTy funcTree;
@@ -354,6 +362,12 @@ public class Semant {
     int size = 0;
     while ((init != null) && (field != null)) {
       ExpTy initTree = buildExp(init.init);
+      ///////////
+      System.out.println(initTree.typ.getClass());
+      System.out.println(field.typ.getClass());
+      ///////////
+
+
       if (!(isEquivalentTypes(initTree.typ, field.typ))) {
         reportError("Tipo do campo \"" + field.name.toString() + "\" difere do valor passado", true);
         return null;
@@ -424,7 +438,7 @@ public class Semant {
 
     ExpList arg = exp.args;
     ArrayList<TExp> targs = new ArrayList<TExp>();
-    while ((arg != null) && (param != null)) {
+    while ((arg != null) && (param != null && param.name != null)) {
       ExpTy argTree = buildExp(arg.head);
       if (!(isEquivalentTypes(argTree.typ, param.typ))) {
         reportError("Tipo do argumento difere do tipo do parâmetro formal da função " + exp.func.toString(), true);
@@ -439,7 +453,7 @@ public class Semant {
       reportError("Número de argumentos maior que esperado para a função " + exp.func.toString(), true);
       return null;        
     }
-    if ((param != null) && (arg == null)) {
+    if ((param != null && param.name != null) && (arg == null)) {
       reportError("Número de argumentos menor que esperado para a função " + exp.func.toString(), true);
       return null;
     }
@@ -451,7 +465,16 @@ public class Semant {
   private ExpTy buildOpExp(OpExp exp) {
 		ExpTy left = buildExp(exp.left); 
     ExpTy right = buildExp(exp.right);
-      if (!(left.typ instanceof INT) || !(right.typ instanceof INT)) {
+
+    ///////////
+    // System.out.println(left.typ.getClass() + " = " + right.typ.getClass());
+    ///////////
+
+
+      if ((!(left.typ instanceof INT) || !(right.typ instanceof INT)) && 
+        ////////////////////////
+         (!(left.typ instanceof STRING) || !(right.typ instanceof STRING))) {
+        ////////////////////////
         String errorMsg = "A operação " + OpExp.opToStr(exp.oper) + " deve ser feita sobre tipos numéricos";
         reportError(errorMsg, true);
         return null;
@@ -633,7 +656,10 @@ public class Semant {
   }
 
   private boolean isEquivalentTypes(Type typ1, Type typ2) {
-    return typ1.getClass() == typ2.getClass();
+    if(typ1.getClass() == typ2.getClass()) return true;
+    if(typ1 instanceof RECORD && typ2 instanceof NIL) return true;
+    if(typ1 instanceof NIL && typ2 instanceof RECORD) return true;
+    return false;
   }
 
   private TypeEntry getTypeEntryFromTable(Symbol typeName) {

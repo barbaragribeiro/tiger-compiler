@@ -29,16 +29,21 @@ public class Env {
 		typeTable.put(Symbol.symbol("string"), new TypeEntry(new STRING()));
 	}
 
-	public FuncEntry installFunc(int lvl, Symbol name, Type resultType, RECORD param) {
+	public FuncEntry installFunc(int lvl, Symbol name, Type resultType, RECORD param, String label) {
+		FuncEntry entry;
 		if (!stdFunctions.contains(name.toString())) {
-			FuncEntry entry = new FuncEntry(lvl, "L" + String.valueOf(nextLabel), param, resultType);
+			if(label != null) entry = new FuncEntry(lvl, label, param, resultType);
+			else {
+				entry = new FuncEntry(lvl, "L" + String.valueOf(nextLabel), param, resultType);
+				System.out.println(name.toString() + " esta rotulada como L" + nextLabel);
+				nextLabel += 1;
+			}
+
 			varTable.put(name, entry);
-			System.out.println(name.toString() + " esta rotulada como L" + nextLabel);
-			nextLabel += 1;
 			return entry;
 		}
 		else {
-			FuncEntry entry = new FuncEntry(lvl, name.toString(), param, resultType);
+			entry = new FuncEntry(lvl, name.toString(), param, resultType);
 			varTable.put(name, entry);
 			return entry;
 		}
@@ -76,26 +81,26 @@ public class Env {
 		Type stringType = new STRING();
 		Type voidType = new VOID();
 
-		installFunc(0, Symbol.symbol("flush"), voidType, null);
-		installFunc(0, Symbol.symbol("getchar"), stringType, null);
-		installFunc(0, Symbol.symbol("malloc"), intType, new RECORD(Symbol.symbol("size"), intType, null));
-		installFunc(0, Symbol.symbol("print"), voidType, new RECORD(Symbol.symbol("s"), stringType, null));
-		installFunc(0, Symbol.symbol("ord"), intType, new RECORD(Symbol.symbol("s"), stringType, null));
-		installFunc(0, Symbol.symbol("chr"), stringType, new RECORD(Symbol.symbol("i"), intType, null));
-		installFunc(0, Symbol.symbol("size"), intType, new RECORD(Symbol.symbol("s"), stringType, null));
-		installFunc(0, Symbol.symbol("exit"), voidType, new RECORD(Symbol.symbol("i"), intType, null));
+		installFunc(0, Symbol.symbol("flush"), voidType, null, null);
+		installFunc(0, Symbol.symbol("getchar"), stringType, null, null);
+		installFunc(0, Symbol.symbol("malloc"), intType, new RECORD(Symbol.symbol("size"), intType, null), null);
+		installFunc(0, Symbol.symbol("print"), voidType, new RECORD(Symbol.symbol("s"), stringType, null), null);
+		installFunc(0, Symbol.symbol("ord"), intType, new RECORD(Symbol.symbol("s"), stringType, null), null);
+		installFunc(0, Symbol.symbol("chr"), stringType, new RECORD(Symbol.symbol("i"), intType, null), null);
+		installFunc(0, Symbol.symbol("size"), intType, new RECORD(Symbol.symbol("s"), stringType, null), null);
+		installFunc(0, Symbol.symbol("exit"), voidType, new RECORD(Symbol.symbol("i"), intType, null), null);
 
 		RECORD param = null;
 		param = new RECORD(Symbol.symbol("size"), intType, new RECORD(Symbol.symbol("init"), intType, null));
-		installFunc(0, Symbol.symbol("initArray"), intType, param);
+		installFunc(0, Symbol.symbol("initArray"), intType, param, null);
 		
 		param = new RECORD(Symbol.symbol("s2"), stringType, null);
 		param = new RECORD(Symbol.symbol("s1"), stringType, param);
-		installFunc(0, Symbol.symbol("concat"), stringType, param);
+		installFunc(0, Symbol.symbol("concat"), stringType, param, null);
 		
 		param = new RECORD(Symbol.symbol("n"), intType, null);
 		param = new RECORD(Symbol.symbol("first"), intType, param);
 		param = new RECORD(Symbol.symbol("s"), stringType, param);
-		installFunc(0, Symbol.symbol("substring"), stringType, param);
+		installFunc(0, Symbol.symbol("substring"), stringType, param, null);
 	}
 }
