@@ -42,4 +42,5 @@ public class Table {
   }
   
   public java.util.Enumeration keys() {return dict.keys();}
-}
+}
+

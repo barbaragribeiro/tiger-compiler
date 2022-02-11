@@ -85,17 +85,17 @@ public class Semant {
   /**************** Primitive types *****************/
 
   private ExpTy buildNilExp(NilExp exp) {
-    return new ExpTy(Translate.translateNilExp(), new NIL());
+    return new ExpTy(Translate.translateNilExp(), getTypeFromTable(Symbol.symbol("nil")));
   }
   
   private ExpTy buildStringExp(StringExp exp) {
     String label = "L" + Integer.toString(env.installLabel());
     labelTree.addFirst(new StringTree(label, exp.value));
-		return new ExpTy(Translate.translateStringExp(label), new STRING());
+		return new ExpTy(Translate.translateStringExp(label), getTypeFromTable(Symbol.symbol("string")));
 	}
 
   private ExpTy buildIntExp(IntExp exp) {
-    return new ExpTy(Translate.translateInt(exp.value), new INT());
+    return new ExpTy(Translate.translateInt(exp.value), getTypeFromTable(Symbol.symbol("int")));
   }
 
   /**************** Variables ****************/
@@ -179,7 +179,7 @@ public class Semant {
       reportError(msg, true);
       return null;
     }
-    return new ExpTy(Translate.translateAssign(destVar.texp, result.texp), new VOID());
+    return new ExpTy(Translate.translateAssign(destVar.texp, result.texp), getTypeFromTable(Symbol.symbol("void")));
   }
 
   private ExpTy buildRightSideAssign(Exp exp) {
@@ -211,9 +211,9 @@ public class Semant {
 
     if (dec.typ != null) {
       // Check if type exists in table
-      TypeEntry typeEntry = getTypeEntryFromTable(dec.typ.name);
+      Type type = getTypeFromTable(dec.typ.name);
       // Check if types are compatible
-      if (!isEquivalentTypes(result.typ, typeEntry.typ)) { 
+      if (!isEquivalentTypes(result.typ, type)) { 
         String msg = "Tipo da expressão incompatível com variável " + dec.name.toString() + " do tipo " + dec.typ.name.toString();
         reportError(msg, true);
         return null;
@@ -224,41 +224,41 @@ public class Semant {
     VarEntry entry = env.installVar(level, dec.name, result.typ);
 
     // build intermediate code
-    return new ExpTy(Translate.translateAssign(Translate.translateSimpleVar(entry.temp), result.texp), new VOID());
+    return new ExpTy(Translate.translateAssign(Translate.translateSimpleVar(entry.temp), result.texp), getTypeFromTable(Symbol.symbol("void")));
   }
 
   private ExpTy buildTypeDec(TypeDec dec) {
-    // TODO: redeclaração de tipos é permitida?
-    env.typeTable.put(dec.name, new TypeEntry(new NIL()));
-    TypeEntry typeEntry = createTypeEntry(dec.ty); 
+    env.typeTable.put(dec.name, new TypeEntry(new RECORD(dec.name)));
+    TypeEntry typeEntry = createTypeEntry(dec.name, dec.ty); 
     // add new type to table
     env.typeTable.put(dec.name, typeEntry);
 
-    /////////////
-    System.out.println(((TypeEntry) env.typeTable.get(dec.name)).typ.getClass());
-    /////////////
-
-
     // build intermediate code 
-    return new ExpTy(Translate.translateNilExp(), new VOID());
+    return new ExpTy(Translate.translateNilExp(), getTypeFromTable(Symbol.symbol("void")));
   }
 
-  private TypeEntry createRecordTypeEntry(RecordTy ty) {
+  private TypeEntry createRecordTypeEntry(Symbol name, RecordTy ty) {
     FieldList fields = ty.fields;
-    return new TypeEntry(createRecord(fields));
+    return new TypeEntry(createRecord(name, fields));
   }
 
   private TypeEntry createArrayTypeEntry(ArrayTy ty) {
-    TypeEntry typeEntryFromTable = getTypeEntryFromTable(ty.typ);
-    return new TypeEntry(new ARRAY(typeEntryFromTable.typ, typeEntryFromTable.typ.size));
+    Type typeFromTable = getTypeFromTable(ty.typ);
+    return new TypeEntry(new ARRAY(typeFromTable, typeFromTable.size));
   }
 
-  private TypeEntry createTypeEntry(Ty ty) {
+  private TypeEntry createTypeEntry(Symbol name, Ty ty) {
     if (ty instanceof NameTy) {
-      return getTypeEntryFromTable( ((NameTy) ty).name );
+      Symbol typeName = ((NameTy) ty).name;
+      TypeEntry varType = (TypeEntry) env.typeTable.get(typeName);
+      if (varType == null) {
+        reportError("Tipo indefinido: " + typeName.toString(), true);
+        return null;
+      }
+      return varType;
     }
     else if (ty instanceof RecordTy) {
-      return createRecordTypeEntry((RecordTy) ty);
+      return createRecordTypeEntry(name, (RecordTy) ty);
     }
     else if (ty instanceof ArrayTy) {
       return createArrayTypeEntry((ArrayTy) ty);
@@ -277,7 +277,7 @@ public class Semant {
 
     // declara variáveis no novo escopo
 
-    RECORD params = createRecord(dec.params);
+    RECORD params = createRecord(null, dec.params);
     RECORD params_og = params;
 
     while (params != null && params.name != null) {
@@ -286,7 +286,7 @@ public class Semant {
     }
 
     // adiciona declaração da função à tabela no proprio escopo
-    Type expectedType = dec.result == null? new VOID() : getTypeEntryFromTable(dec.result.name).typ;
+    Type expectedType = dec.result == null? getTypeFromTable(Symbol.symbol("void")) : getTypeFromTable(dec.result.name);
     FuncEntry entry_in = env.installFunc(level, dec.name, expectedType, params_og, null);
 
     // build intermediate code
@@ -307,24 +307,24 @@ public class Semant {
     ExpTy funcTree;
     if (dec.result != null) {
       // se tiver retorno, coloca o retorno na variável temp de retorno (rv)
-      funcTree = new ExpTy(Translate.translateFunctionReturn(body.texp), new VOID());
+      funcTree = new ExpTy(Translate.translateFunctionReturn(body.texp), getTypeFromTable(Symbol.symbol("void")));
     }
     else {
-      funcTree = new ExpTy(body.texp, new VOID());
+      funcTree = new ExpTy(body.texp, getTypeFromTable(Symbol.symbol("void")));
     }
 
     // adiciona funcao à arvore de funcoes
     labelTree.addFirst(new FuncTree(entry_out.label, funcTree));
     
     // Retorna void pra árvore principal
-    return new ExpTy(Translate.translateNilExp(), new VOID());
+    return new ExpTy(Translate.translateNilExp(), getTypeFromTable(Symbol.symbol("void")));
   }
 
   
   /**************** Other Expressions *****************/
 
   private ExpTy buildArrayExp(ArrayExp exp) {
-    TypeEntry type = getTypeEntryFromTable(exp.typ);
+    Type type = getTypeFromTable(exp.typ);
 
     ExpTy size = buildExp(exp.size);
     // check if index has type int
@@ -336,7 +336,7 @@ public class Semant {
     ExpTy init = buildExp(exp.init);
 
     // check if types are compatible
-    if (!isEquivalentTypes(init.typ, ((ARRAY) type.typ).typ)) {
+    if (!isEquivalentTypes(init.typ, ((ARRAY) type).typ)) {
       reportError("Tipo da expressão não compatível com tipo do array", true);
       return null;
     }
@@ -344,15 +344,15 @@ public class Semant {
     ArrayList<TExp> targs = new ArrayList<TExp>();
     targs.add(size.texp);
     targs.add(init.texp);
-    return new ExpTy(Translate.translateCall("initArray", false, targs), type.typ);
+    return new ExpTy(Translate.translateCall("initArray", false, targs), type);
   }
 
 
   private ExpTy buildRecordExp(RecordExp exp) {
-    TypeEntry type = getTypeEntryFromTable(exp.typ);
+    Type type = getTypeFromTable(exp.typ);
 
     // Checa número de campos passados e tipo de cada um. Traduz código para cada inicialização
-    RECORD field = (RECORD) type.typ;
+    RECORD field = (RECORD) type;
     FieldExpList init = exp.fields;
     ArrayList<TExp> tinits = new ArrayList<TExp>();
     
@@ -362,11 +362,6 @@ public class Semant {
     int size = 0;
     while ((init != null) && (field != null)) {
       ExpTy initTree = buildExp(init.init);
-      ///////////
-      System.out.println(initTree.typ.getClass());
-      System.out.println(field.typ.getClass());
-      ///////////
-
 
       if (!(isEquivalentTypes(initTree.typ, field.typ))) {
         reportError("Tipo do campo \"" + field.name.toString() + "\" difere do valor passado", true);
@@ -393,30 +388,30 @@ public class Semant {
     ArrayList<TExp> targs = new ArrayList<TExp>();
     targs.add(Translate.translateNilExp());
     targs.add(Translate.translateInt(size * Translate.wordSize));
-    ExpTy mallocaRegistro = new ExpTy(Translate.translateCall("malloc", false, targs), type.typ);
-    ExpTy alocaRegistro = new ExpTy(Translate.translateAssign(tempTemp, mallocaRegistro.texp), type.typ);
+    ExpTy mallocaRegistro = new ExpTy(Translate.translateCall("malloc", false, targs), type);
+    ExpTy alocaRegistro = new ExpTy(Translate.translateAssign(tempTemp, mallocaRegistro.texp), type);
 
     ExpTy initTree = buildFieldList(tinits, 0);
 
-    ExpTy retornaRegistro = new ExpTy(Translate.translateRecordExp(alocaRegistro.texp, initTree.texp), type.typ);
-    return new ExpTy(Translate.translateRecordAssignExp(retornaRegistro.texp, tempTemp), type.typ);
+    ExpTy retornaRegistro = new ExpTy(Translate.translateRecordExp(alocaRegistro.texp, initTree.texp), type);
+    return new ExpTy(Translate.translateRecordAssignExp(retornaRegistro.texp, tempTemp), type);
   }
 
   private ExpTy buildFieldList(ArrayList<TExp> tinits, int index) {
     // Vazia
     if(index == tinits.size()) {
-      return new ExpTy(Translate.translateNilExp(), new VOID());
+      return new ExpTy(Translate.translateNilExp(), getTypeFromTable(Symbol.symbol("void")));
     }
 
     // ExpList possui apenas cabeca -> nao tem SEQ
     if(index == tinits.size()-1) {
-      return new ExpTy(tinits.get(index), new VOID());
+      return new ExpTy(tinits.get(index), getTypeFromTable(Symbol.symbol("void")));
     }
     
     // Completa
-    ExpTy head = new ExpTy(tinits.get(index), new VOID());
+    ExpTy head = new ExpTy(tinits.get(index), getTypeFromTable(Symbol.symbol("void")));
     ExpTy tail = buildFieldList(tinits, index+1);
-    return new ExpTy(Translate.translateRecordExp(head.texp, tail.texp), new VOID());
+    return new ExpTy(Translate.translateRecordExp(head.texp, tail.texp), getTypeFromTable(Symbol.symbol("void")));
   }
 
 
@@ -480,7 +475,7 @@ public class Semant {
         return null;
       }
       else {
-        return new ExpTy(Translate.translateOpExp(exp.oper, left.texp, right.texp), new INT()); 
+        return new ExpTy(Translate.translateOpExp(exp.oper, left.texp, right.texp), getTypeFromTable(Symbol.symbol("int"))); 
       }
   }
 
@@ -488,24 +483,24 @@ public class Semant {
   /************ Lists ***********/
 
   private ExpTy buildDecList(DecList d) {
-    if(d == null) return new ExpTy(null, new VOID());
+    if(d == null) return new ExpTy(null, getTypeFromTable(Symbol.symbol("void")));
 
     // DecList possui apenas cabeca -> nao tem SEQ
     if(d.tail == null) {
-      return new ExpTy(buildDec(d.head).texp, new VOID()); 
+      return new ExpTy(buildDec(d.head).texp, getTypeFromTable(Symbol.symbol("void"))); 
     }
     
     // Completa
     ExpTy head = buildDec(d.head);
     ExpTy tail = buildDecList(d.tail);
-    return new ExpTy(Translate.translateDecList(head.texp, tail.texp), new VOID()); 
+    return new ExpTy(Translate.translateDecList(head.texp, tail.texp), getTypeFromTable(Symbol.symbol("void"))); 
   }
 
   // ExpList
   public ExpTy buildExpList(ExpList e) {
     // Vazia
     if(e == null) {
-      return new ExpTy(Translate.translateNilExp(), new VOID());
+      return new ExpTy(Translate.translateNilExp(), getTypeFromTable(Symbol.symbol("void")));
     }
 
     // ExpList possui apenas cabeca -> nao tem SEQ
@@ -549,7 +544,7 @@ public class Semant {
 
     ExpTy condition = buildExp(e.test);
     ExpTy then = buildExp(e.thenclause);
-    ExpTy senao = new ExpTy(Translate.translateNilExp(), new VOID());
+    ExpTy senao = new ExpTy(Translate.translateNilExp(), getTypeFromTable(Symbol.symbol("void")));
     if(e.elseclause != null) senao = buildExp(e.elseclause);
 
     // Checa se expressao da condicao retorna inteiro
@@ -589,7 +584,7 @@ public class Semant {
   }
 
   private ExpTy buildBreakExp(BreakExp exp) {
-    ExpTy jump = new ExpTy(Translate.translateBreak(nextEscape), new NIL());
+    ExpTy jump = new ExpTy(Translate.translateBreak(nextEscape), getTypeFromTable(Symbol.symbol("nil")));
     nextEscape = null;
     return jump;
   }
@@ -614,7 +609,7 @@ public class Semant {
     }
 
     ExpTy jump = buildBranch(e.test, in, out);
-    return new ExpTy(Translate.translateWhileExp(jump.texp, body.texp, test, in, out), new VOID());
+    return new ExpTy(Translate.translateWhileExp(jump.texp, body.texp, test, in, out), getTypeFromTable(Symbol.symbol("void")));
   }
 
   private ExpTy buildForExp(ForExp e) {
@@ -637,7 +632,7 @@ public class Semant {
     endScope();
     nextEscape = previousEscape;
   
-    return new ExpTy(Translate.translateFor(varDec.texp, upper.texp, body.texp, in, out, increment), new VOID());
+    return new ExpTy(Translate.translateFor(varDec.texp, upper.texp, body.texp, in, out, increment), getTypeFromTable(Symbol.symbol("void")));
   }
 
 
@@ -656,19 +651,22 @@ public class Semant {
   }
 
   private boolean isEquivalentTypes(Type typ1, Type typ2) {
-    if(typ1.getClass() == typ2.getClass()) return true;
     if(typ1 instanceof RECORD && typ2 instanceof NIL) return true;
     if(typ1 instanceof NIL && typ2 instanceof RECORD) return true;
+    if(typ1 instanceof RECORD && typ2 instanceof RECORD)  {
+      return ((RECORD) typ1).recordName == ((RECORD) typ2).recordName;
+    }
+    if(typ1 == typ2) return true;
     return false;
   }
 
-  private TypeEntry getTypeEntryFromTable(Symbol typeName) {
+  private Type getTypeFromTable(Symbol typeName) {
     TypeEntry varType = (TypeEntry) env.typeTable.get(typeName);
     if (varType == null) {
       reportError("Tipo indefinido: " + typeName.toString(), true);
       return null;
     }
-    return varType;
+    return varType.typ;
   }
 
   private void reportError(String msg, boolean exit) {
@@ -678,20 +676,20 @@ public class Semant {
       }
   }
 
-  private RECORD createRecord(FieldList fields) {
+  private RECORD createRecord(Symbol name, FieldList fields) {
     // int size = 0;
 
     if (fields == null) {
-      return new RECORD();
+      return new RECORD(name);
     }
 
     RECORD newRec = null;
     RECORD firstRec = null;
     RECORD prevRec = null;
     while (fields != null) {
-      TypeEntry typeEntry = getTypeEntryFromTable(fields.typ);
-      newRec = new RECORD(fields.name, typeEntry.typ, null, typeEntry.typ.size);
-      // size += typeEntry.typ.size;
+      Type type = getTypeFromTable(fields.typ);
+      newRec = new RECORD(name, fields.name, type, null, type.size);
+      // size += type.size;
       if (firstRec == null) {
         firstRec = newRec;
       }
@@ -721,15 +719,15 @@ public class Semant {
       } else {
         oper = OpExp.NE;
         left = buildExp(test);
-        right = new ExpTy(Translate.translateInt(0), new INT());
+        right = new ExpTy(Translate.translateInt(0), getTypeFromTable(Symbol.symbol("int")));
       }
     } else {
       oper = OpExp.NE;
       left = buildExp(test);
-      right = new ExpTy(Translate.translateInt(0), new INT());
+      right = new ExpTy(Translate.translateInt(0), getTypeFromTable(Symbol.symbol("int")));
     }
     
-    return new ExpTy(Translate.translateIfCondExp(oper, left.texp, right.texp, l1, l2), new VOID());
+    return new ExpTy(Translate.translateIfCondExp(oper, left.texp, right.texp, l1, l2), getTypeFromTable(Symbol.symbol("void")));
   }
 
 }

@@ -27,6 +27,8 @@ public class Env {
 	private void installPrimitiveTypes() {
 		typeTable.put(Symbol.symbol("int"), new TypeEntry(new INT()));
 		typeTable.put(Symbol.symbol("string"), new TypeEntry(new STRING()));
+		typeTable.put(Symbol.symbol("nil"), new TypeEntry(new NIL()));
+		typeTable.put(Symbol.symbol("void"), new TypeEntry(new VOID()));
 	}
 
 	public FuncEntry installFunc(int lvl, Symbol name, Type resultType, RECORD param, String label) {
@@ -83,24 +85,24 @@ public class Env {
 
 		installFunc(0, Symbol.symbol("flush"), voidType, null, null);
 		installFunc(0, Symbol.symbol("getchar"), stringType, null, null);
-		installFunc(0, Symbol.symbol("malloc"), intType, new RECORD(Symbol.symbol("size"), intType, null), null);
-		installFunc(0, Symbol.symbol("print"), voidType, new RECORD(Symbol.symbol("s"), stringType, null), null);
-		installFunc(0, Symbol.symbol("ord"), intType, new RECORD(Symbol.symbol("s"), stringType, null), null);
-		installFunc(0, Symbol.symbol("chr"), stringType, new RECORD(Symbol.symbol("i"), intType, null), null);
-		installFunc(0, Symbol.symbol("size"), intType, new RECORD(Symbol.symbol("s"), stringType, null), null);
-		installFunc(0, Symbol.symbol("exit"), voidType, new RECORD(Symbol.symbol("i"), intType, null), null);
+		installFunc(0, Symbol.symbol("malloc"), intType, new RECORD(null, Symbol.symbol("size"), intType, null), null);
+		installFunc(0, Symbol.symbol("print"), voidType, new RECORD(null, Symbol.symbol("s"), stringType, null), null);
+		installFunc(0, Symbol.symbol("ord"), intType, new RECORD(null, Symbol.symbol("s"), stringType, null), null);
+		installFunc(0, Symbol.symbol("chr"), stringType, new RECORD(null, Symbol.symbol("i"), intType, null), null);
+		installFunc(0, Symbol.symbol("size"), intType, new RECORD(null, Symbol.symbol("s"), stringType, null), null);
+		installFunc(0, Symbol.symbol("exit"), voidType, new RECORD(null, Symbol.symbol("i"), intType, null), null);
 
 		RECORD param = null;
-		param = new RECORD(Symbol.symbol("size"), intType, new RECORD(Symbol.symbol("init"), intType, null));
+		param = new RECORD(null, Symbol.symbol("size"), intType, new RECORD(null, Symbol.symbol("init"), intType, null));
 		installFunc(0, Symbol.symbol("initArray"), intType, param, null);
 		
-		param = new RECORD(Symbol.symbol("s2"), stringType, null);
-		param = new RECORD(Symbol.symbol("s1"), stringType, param);
+		param = new RECORD(null, Symbol.symbol("s2"), stringType, null);
+		param = new RECORD(null, Symbol.symbol("s1"), stringType, param);
 		installFunc(0, Symbol.symbol("concat"), stringType, param, null);
 		
-		param = new RECORD(Symbol.symbol("n"), intType, null);
-		param = new RECORD(Symbol.symbol("first"), intType, param);
-		param = new RECORD(Symbol.symbol("s"), stringType, param);
+		param = new RECORD(null, Symbol.symbol("n"), intType, null);
+		param = new RECORD(null, Symbol.symbol("first"), intType, param);
+		param = new RECORD(null, Symbol.symbol("s"), stringType, param);
 		installFunc(0, Symbol.symbol("substring"), stringType, param, null);
 	}
 }
