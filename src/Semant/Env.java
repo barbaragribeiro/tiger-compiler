@@ -79,9 +79,9 @@ public class Env {
 			)
 		);
 
-		Type intType = new INT();
-		Type stringType = new STRING();
-		Type voidType = new VOID();
+		Type intType = ((TypeEntry) typeTable.get(Symbol.symbol("int"))).typ;
+		Type stringType = ((TypeEntry) typeTable.get(Symbol.symbol("string"))).typ;
+		Type voidType = ((TypeEntry) typeTable.get(Symbol.symbol("void"))).typ;
 
 		installFunc(0, Symbol.symbol("flush"), voidType, null, null);
 		installFunc(0, Symbol.symbol("getchar"), stringType, null, null);
