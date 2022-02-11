@@ -9,7 +9,6 @@ import Symbol.Table;
 import Symbol.Symbol;
 import Absyn.*;
 import Types.*;
-import Temp.*;
 import Translate.Translate;
 import Tree.TExp;
 

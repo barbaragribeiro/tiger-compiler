@@ -2,7 +2,7 @@ package Translate;
 
 import Tree.*;
 import Absyn.OpExp;
-import Temp.*;
+import Semant.Label;
 
 import java.util.ArrayList;
 

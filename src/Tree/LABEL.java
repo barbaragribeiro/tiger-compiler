@@ -1,6 +1,6 @@
 package Tree;
 
-import Temp.Label;
+import Semant.Label;
 
 public class LABEL extends TExp {
   public Label label;

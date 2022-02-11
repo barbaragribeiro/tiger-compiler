@@ -1,4 +1,4 @@
-package Temp;
+package Semant;
 
 import Symbol.Symbol;
 

@@ -1,6 +1,6 @@
 package Tree;
 
-import Temp.Label;
+import Semant.Label;
 
 public class CJUMP extends TExp {
   public int relop;
