@@ -461,22 +461,14 @@ public class Semant {
 		ExpTy left = buildExp(exp.left); 
     ExpTy right = buildExp(exp.right);
 
-    ///////////
-    // System.out.println(left.typ.getClass() + " = " + right.typ.getClass());
-    ///////////
-
-
-      if ((!(left.typ instanceof INT) || !(right.typ instanceof INT)) && 
-        ////////////////////////
-         (!(left.typ instanceof STRING) || !(right.typ instanceof STRING))) {
-        ////////////////////////
-        String errorMsg = "A operação " + OpExp.opToStr(exp.oper) + " deve ser feita sobre tipos numéricos";
-        reportError(errorMsg, true);
-        return null;
-      }
-      else {
-        return new ExpTy(Translate.translateOpExp(exp.oper, left.texp, right.texp), getTypeFromTable(Symbol.symbol("int"))); 
-      }
+    if (!(left.typ instanceof INT) || !(right.typ instanceof INT)) {
+      String errorMsg = "A operação " + OpExp.opToStr(exp.oper) + " deve ser feita sobre tipos numéricos";
+      reportError(errorMsg, true);
+      return null;
+    }
+    else {
+      return new ExpTy(Translate.translateOpExp(exp.oper, left.texp, right.texp), getTypeFromTable(Symbol.symbol("int"))); 
+    }
   }
 
 
